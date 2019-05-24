@@ -1,4 +1,4 @@
-;;;; .lisp ---
+;;;; global-environment.lisp --- A global environment implementation
 ;;;;
 ;;;; Copyright (C) 2019 Jan Moringen
 ;;;;
