@@ -12,4 +12,6 @@
 (test construction.smoke
   "Test constructing `global-environment' instances."
 
-  (finishes (make-instance 'global-environment)))
+  (let ((env (make-instance 'global-environment)))
+    (is (=     0   (entry-count 'function env)))
+    (is (equal '() (entries 'function env)))))

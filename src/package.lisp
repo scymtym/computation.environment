@@ -17,6 +17,7 @@
 
   ;; Environment protocol
   (:export
+   #:entry-count
    #:entries
 
    #:lookup                             ; also setf
@@ -28,7 +29,7 @@
   (:export
    #:parent
 
-   #:direct-entries
+   #:direct-entries ; TODO direct-entry-count?
 
    #:direct-lookup)
 
