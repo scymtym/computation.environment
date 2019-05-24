@@ -1,4 +1,10 @@
-(cl:in-package #:environment)
+;;;; lexical-environment.lisp ---
+;;;;
+;;;; Copyright (C) 2019 Jan Moringen
+;;;;
+;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
+
+(cl:in-package #:computation.environment)
 
 (defclass lexical-environment (meta-namespace-lookup-mixin
                                hierarchical-environment-mixin

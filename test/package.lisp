@@ -1,15 +1,17 @@
-(cl:defpackage #:environment.test
+(cl:defpackage #:computation.environment.test
   (:use
    #:cl
 
-   #:fiveam)
+   #:fiveam
+
+   #:computation.environment)
 
   (:export
    #:run-tests))
 
-(cl:in-package #:environment.test)
+(cl:in-package #:computation.environment.test)
 
-(def-suite :environment)
+(def-suite :computation.environment)
 
 (defun run-tests ()
-  (run! :environment))
+  (run! :computation.environment))

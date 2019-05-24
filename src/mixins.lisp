@@ -1,4 +1,4 @@
-(cl:in-package #:environment)
+(cl:in-package #:computation.environment)
 
 ;;; `bindings-mixin'
 
@@ -12,33 +12,21 @@
 
 (declaim (inline namespace-bindings ensure-namespace-bindings))
 (defun namespace-bindings (namespace environment)
-  (when-let ((functions (gethash namespace (%bindings environment))))
-    (values-list functions)))
+  (gethash namespace (%bindings environment)))
 
 (defun ensure-namespace-bindings (namespace environment)
-  (values-list
-   (ensure-gethash
-    namespace (%bindings environment)
-    (multiple-value-list (make-bindings-table namespace environment)))))
-
-(defmethod make-bindings-table (namespace environment)
-  (let ((table (make-hash-table :test #'equal)))
-    (values (lambda (name)
-              (gethash name table))
-            (lambda (new-value name)
-              (setf (gethash name table) new-value))
-            (lambda ()
-              (hash-table-alist table)))))
+  (ensure-gethash namespace (%bindings environment)
+                  (make-bindings namespace environment)))
 
 ;;; Entries
 
 (defmethod direct-entries ((namespace t) (environment bindings-mixin))
-  (when-let ((entries (nth-value 2 (namespace-bindings namespace environment))))
-    (funcall entries)))
+  (when-let ((bindings (namespace-bindings namespace environment)))
+    (entries-in-bindings bindings namespace environment)))
 
 (macrolet ((do-it (name namespace environment)
-             `(if-let ((get (namespace-bindings ,namespace ,environment)))
-                (funcall get ,name)
+             `(if-let ((bindings (namespace-bindings ,namespace ,environment)))
+                (lookup-in-bindings ,name bindings ,namespace ,environment)
                 (values nil nil))))
 
   (defmethod direct-lookup ((name t) (namespace t) (environment bindings-mixin))
@@ -55,15 +43,17 @@
                           (environment bindings-mixin)
                           &key if-does-not-exist if-exists)
   (declare (ignore if-does-not-exist if-exists))
-  (let ((set (nth-value 1 (ensure-namespace-bindings namespace environment))))
-    (funcall set new-value name)))
+  (let ((bindings (ensure-namespace-bindings namespace environment)))
+    (setf (lookup-in-bindings name bindings namespace environment) new-value)))
 
 ;;; `meta-namespace-mixin'
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defclass namespace () ()))
+  (defclass eq-namespace (eq-hash-table-bindings-mixin)
+    ()))
 
-(#+sbcl sb-ext:defglobal #-sbcl defvar **meta-namespace** (make-instance 'namespace))
+(#+sbcl sb-ext:defglobal #-sbcl defvar **meta-namespace**
+  (make-instance 'eq-namespace))
 
 (defclass meta-namespace-lookup-mixin ()
   ((%namespaces :initarg  :namespaces
@@ -101,7 +91,7 @@
 
 ;;; `hierarchical-environment-mixin'
 
-(defclass hierarchical-environment-mixin () ; TODO make a parented-mixin in cleaal.base?
+(defclass hierarchical-environment-mixin ()
   ((%parent :initarg  :parent
             :reader   parent
             :initform nil)))

@@ -1,10 +1,28 @@
-(cl:in-package #:environment)
+;;;; protocol.lisp --- Protocol provided by the computation.environment system.
+;;;;
+;;;; Copyright (C) 2019 Jan Moringen
+;;;;
+;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
+
+(cl:in-package #:computation.environment)
+
+;;; Bindings protocol
+
+(defgeneric make-bindings (namespace environment))
+
+(defgeneric entries-in-bindings (bindings namespace environment))
+
+(defgeneric lookup-in-bindings (name bindings namespace environment))
+
+(defgeneric (setf lookup-in-bindings) (new-value name bindings namespace environment))
 
 ;;; Environment protocol
 
 ;;; TODO accessors for namespaces (direct and indirect?)
 
 (defgeneric entry-count (namespace environment))
+
+;; TODO map-entries
 
 (defgeneric entries (namespace environment)
   (:documentation

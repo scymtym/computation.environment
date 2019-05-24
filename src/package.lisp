@@ -1,7 +1,19 @@
-(cl:defpackage #:environment
+;;;; package.lisp --- Package definition for the computation.environment system
+;;;;
+;;;; Copyright (C) 2019 Jan Moringen
+;;;;
+;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
+
+(cl:defpackage #:computation.environment
   (:use
    #:cl
    #:alexandria)
+
+  ;; Bindings protocol
+  (:export
+   #:make-bindings
+   #:entries-in-bindings
+   #:lookup-in-bindings)                ; also setf
 
   ;; Environment protocol
   (:export
@@ -24,6 +36,10 @@
   (:export
    #:standard-environment)
 
+  ;; Class global-environment
+  (:export
+   #:global-environment)
+
   ;; Class lexical-environment
   (:export
    #:lexical-environment)
@@ -37,4 +53,4 @@
    #:augmented-namespace)
 
   (:documentation
-   "TODO"))
+   "Protocols and classes for representing environments."))
