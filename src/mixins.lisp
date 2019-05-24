@@ -20,9 +20,15 @@
 
 ;;; Entries
 
-(defmethod direct-entries ((namespace t) (environment bindings-mixin))
-  (when-let ((bindings (namespace-bindings namespace environment)))
-    (entries-in-bindings bindings namespace environment)))
+(macrolet ((do-it (namespace environment)
+             `(when-let ((bindings (namespace-bindings ,namespace ,environment)))
+                (entries-in-bindings bindings ,namespace ,environment))))
+
+  (defmethod direct-entries ((namespace t) (environment bindings-mixin))
+    (do-it namespace environment))
+
+  (defmethod entries ((namespace t) (environment bindings-mixin))
+    (do-it namespace environment)))
 
 (macrolet ((do-it (name namespace environment)
              `(if-let ((bindings (namespace-bindings ,namespace ,environment)))
