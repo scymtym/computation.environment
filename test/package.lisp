@@ -1,3 +1,9 @@
+;;;; package.lisp --- Package definition for tests of the computation.environment system
+;;;;
+;;;; Copyright (C) 2019 Jan Moringen
+;;;;
+;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
+
 (cl:defpackage #:computation.environment.test
   (:use
    #:cl

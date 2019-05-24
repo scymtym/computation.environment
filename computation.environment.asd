@@ -36,7 +36,9 @@
   :components  ((:module     "test"
                  :serial     t
                  :components ((:file       "package")
+                              (:file       "util")
 
+                              (:file       "global-environment")
                               (:file       "lexical-environment")
 
                               (:file       "augment"))))
