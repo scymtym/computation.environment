@@ -5,8 +5,45 @@
 
 * TODO Tutorial
 
-  #+BEGIN_SRC lisp
-    (computation.environment:make-instance 'environment:standard-environment)
-  #+END_SRC
+** TODO Making environments
+
+   #+BEGIN_SRC lisp :exports both
+     (defvar *environment* (make-instance 'computation.environment:global-environment))
+     (setf (computation.environment:lookup 'function 'computation.environment::namespace *environment*)
+           (make-instance 'computation.environment::eq-namespace))
+     *environment*
+   #+END_SRC
+
+   #+RESULTS:
+   : #<GLOBAL-ENVIRONMENT 1 namespace {1007E13A63}>
+
+** TODO Looking up bindings
+
+   #+BEGIN_SRC lisp :exports both
+     (handler-case
+         (computation.environment:lookup 'foo 'function *environment*)
+       (error (condition)
+         (princ-to-string condition)))
+   #+END_SRC
+
+   #+RESULTS:
+   : FUNCTION FOO not found in #<GLOBAL-ENVIRONMENT 1 namespace {1007E13A63}>
+
+   #+BEGIN_SRC lisp :exports both
+     (computation.environment:entries 'function *environment*)
+   #+END_SRC
+
+   #+RESULTS:
+   : NIL
+
+** TODO Adding bindings
+
+   #+BEGIN_SRC lisp :exports both
+     (handler-case
+         (computation.environment:lookup 'foo 'function *environment*)
+       (error (condition)
+         (princ-to-string condition)))
+   #+END_SRC
+
 
 * TODO Dictionary
