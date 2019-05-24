@@ -71,6 +71,11 @@
                  ,namespace (%namespaces ,environment)
                  (lookup ,namespace 'namespace ,environment)))))
 
+  (defmethod direct-entries ((namespace   symbol)
+                             (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (direct-entries namespace environment)))
+
   (defmethod lookup ((name        t)
                      (namespace   symbol)
                      (environment meta-namespace-lookup-mixin)
