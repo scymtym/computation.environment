@@ -11,7 +11,18 @@
 (defclass hash-table-bindings-mixin ()
   ())
 
-(defmethod entries-in-bindings ((bindings    hash-table)
+(defmethod entry-count-in-bindings ((bindings    hash-table)
+                                    (namespace   hash-table-bindings-mixin)
+                                    (environment t))
+  (hash-table-count bindings))
+
+(defmethod map-entries-in-bindings ((function    function)
+                                    (bindings    hash-table)
+                                    (namespace   hash-table-bindings-mixin)
+                                    (environment t))
+  (maphash function bindings))
+
+(defmethod entries-in-bindings ((bindings    hash-table) ; TODO remove this?
                                 (namespace   hash-table-bindings-mixin)
                                 (environment t))
   (hash-table-alist bindings))

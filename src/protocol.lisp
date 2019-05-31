@@ -22,7 +22,7 @@
 
 (defgeneric entry-count (namespace environment))
 
-;; TODO map-entries
+(defgeneric map-entries (function namespace environment))
 
 (defgeneric entries (namespace environment)
   (:documentation
@@ -56,6 +56,14 @@
 (defgeneric ensure (name namespace environment make-cont))
 
 ;;; Default behavior
+
+(defmethod entries ((namespace t) (environment t))
+  (let ((result '()))
+    (flet ((collect (name value)
+             (push (cons name value) result)))
+      (declare (dynamic-extent #'collect))
+      (map-entries #'collect namespace environment))
+    result))
 
 (defmethod lookup :around ((name      t)
                            (namespace t) ; standard-object
@@ -103,6 +111,10 @@
 
 (defgeneric depth (environment))
 
+(defgeneric direct-entry-count (namespace environment))
+
+(defgeneric map-direct-entries (function namespace environment))
+
 (defgeneric direct-entries (namespace environment))
 
 ;;; TODO alternatively add &key scope to lookup where :scope t => lookup, :scope 1 => direct-lookup, :scope 2 => direct and parent, ...
@@ -117,6 +129,14 @@
   (if-let ((parent (parent environment)))
     (1+ (depth parent))
     0))
+
+(defmethod direct-entries ((namespace t) (environment t))
+  (let ((result '()))
+    (flet ((collect (name value)
+             (push (cons name value) result)))
+      (declare (dynamic-extent #'collect))
+      (map-direct-entries #'collect namespace environment))
+    result))
 
 ;;; Entry update protocol
 

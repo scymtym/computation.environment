@@ -21,14 +21,29 @@
 ;;; Entries
 
 (macrolet ((do-it (namespace environment)
-             `(when-let ((bindings (namespace-bindings ,namespace ,environment)))
-                (entries-in-bindings bindings ,namespace ,environment))))
+             `(if-let ((bindings (namespace-bindings ,namespace ,environment)))
+                (entry-count-in-bindings bindings ,namespace ,environment)
+                0)))
 
-  (defmethod direct-entries ((namespace t) (environment bindings-mixin))
+  (defmethod direct-entry-count ((namespace t) (environment bindings-mixin))
     (do-it namespace environment))
 
-  (defmethod entries ((namespace t) (environment bindings-mixin))
+  (defmethod entry-count ((namespace t) (environment bindings-mixin))
     (do-it namespace environment)))
+
+(macrolet ((do-it (function namespace environment)
+             `(when-let ((bindings (namespace-bindings ,namespace ,environment)))
+                (map-entries-in-bindings function bindings ,namespace ,environment))))
+
+  (defmethod map-direct-entries ((function    function)
+                                 (namespace   t)
+                                 (environment bindings-mixin))
+    (do-it function namespace environment))
+
+  (defmethod map-entries ((function    function)
+                          (namespace   t)
+                          (environment bindings-mixin))
+    (do-it function namespace environment)))
 
 (macrolet ((do-it (name namespace environment)
              `(if-let ((bindings (namespace-bindings ,namespace ,environment)))
@@ -66,15 +81,25 @@
                 :accessor %namespaces)))
 
 (macrolet ((ensure-namespace (environment namespace)
-             (once-only (environment namespace)
-               `(ensure-gethash
-                 ,namespace (%namespaces ,environment)
-                 (lookup ,namespace 'namespace ,environment)))))
+             `(ensure-gethash
+               ,namespace (%namespaces ,environment)
+               (lookup ,namespace 'namespace ,environment))))
 
-  (defmethod direct-entries ((namespace   symbol)
-                             (environment meta-namespace-lookup-mixin))
+  (defmethod entry-count ((namespace   symbol)
+                          (environment meta-namespace-lookup-mixin))
     (let ((namespace (ensure-namespace environment namespace)))
-      (direct-entries namespace environment)))
+      (entry-count namespace environment)))
+
+  (defmethod map-entries ((function    function)
+                          (namespace   symbol)
+                          (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (map-entries function namespace environment)))
+
+  (defmethod entries ((namespace   symbol)
+                      (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (entries namespace environment)))
 
   (defmethod lookup ((name        t)
                      (namespace   symbol)
@@ -98,7 +123,17 @@
       (setf (lookup name namespace environment
                     :if-does-not-exist if-does-not-exist
                     :if-exists         if-exists)
-            new-value))))
+            new-value)))
+
+  (defmethod direct-entry-count ((namespace   symbol)
+                                 (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (direct-entry-count namespace environment)))
+
+  (defmethod direct-entries ((namespace   symbol)
+                             (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (direct-entries namespace environment))))
 
 ;;; `hierarchical-environment-mixin'
 
@@ -112,6 +147,20 @@
     `((:depth ,depth " @~D" ((:after :namespace-count))))))
 
 ;;; Entries and lookup protocol
+
+(defmethod entry-count ((namespace   t)
+                        (environment hierarchical-environment-mixin))
+  (+ (direct-entry-count namespace environment)
+     (if-let ((parent (parent environment)))
+       (entry-count namespace parent)
+       0)))
+
+(defmethod map-entries ((function    function)
+                        (namespace   t)
+                        (environment hierarchical-environment-mixin))
+  (map-direct-entries function namespace environment)
+  (when-let ((parent (parent environment)))
+    (map-entries function namespace parent)))
 
 (defmethod entries ((namespace   t)
                     (environment hierarchical-environment-mixin))
