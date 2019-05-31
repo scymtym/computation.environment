@@ -9,6 +9,16 @@
    #:cl
    #:alexandria)
 
+  ;; Conditions
+  (:export
+   #:name
+
+   #:namespace-does-not-exist-error
+
+   #:namespace
+
+   #:entry-does-not-exist-error)
+
   ;; Bindings protocol
   (:export
    #:make-bindings

@@ -69,11 +69,12 @@
         (values value value?)
         (typecase if-does-not-exist
           (function (let ((condition (make-condition
-                                      'simple-error ; TODO
-                                      :format-control "~A ~S not found in ~A"
-                                      :format-arguments (list namespace name container))))
+                                      'entry-does-not-exist-error
+                                      :environment container
+                                      :name        name
+                                      :namespace   namespace)))
                       (funcall if-does-not-exist condition)))
-          (t        if-does-not-exist)))))
+          (t        (values if-does-not-exist nil))))))
 
 ;;; TODO could return three values: old, updated, new
 (defmethod make-or-update ((name        t)

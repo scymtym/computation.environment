@@ -18,6 +18,7 @@
                  :serial t
                  :components ((:file       "package")
                               (:file       "protocol")
+                              (:file       "conditions")
 
                               (:file       "namespace-mixins")
                               (:file       "mixins") ; TODO environment-mixins
