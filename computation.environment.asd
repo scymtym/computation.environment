@@ -38,6 +38,7 @@
                  :serial     t
                  :components ((:file       "package")
                               (:file       "util")
+                              (:file       "protocol")
 
                               (:file       "global-environment")
                               (:file       "lexical-environment")

@@ -6,6 +6,14 @@
 
 (cl:in-package #:computation.environment.test)
 
+(defun make-empty-global-environment ()
+  (let ((env (make-instance 'global-environment)))
+    (setf (lookup 'function 'computation.environment::namespace env)
+          (make-instance 'computation.environment::eq-namespace)
+          (lookup 'variable 'computation.environment::namespace env)
+          (make-instance 'computation.environment::eq-namespace))
+    env))
+
 (defun make-populated-global-environment ()
   (let ((env (make-instance 'global-environment)))
     (setf (lookup 'function 'computation.environment::namespace env)
