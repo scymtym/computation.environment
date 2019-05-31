@@ -9,7 +9,15 @@
 (def-suite* :computation.environment.lexical-environment
   :in :computation.environment)
 
-(test construction.smoke
+(test lexical-environment.construction.smoke
   "Test constructing `lexical-environment' instances."
 
-  (signals error (make-instance 'lexical-environment)))
+  (signals error (make-instance 'lexical-environment))
+
+  (let* ((parent (make-empty-global-environment))
+         (env    (make-instance 'lexical-environment :parent parent)))
+    (map-entries (lambda (name namespace)
+                   (unless (eq name 'computation.environment::namespace)
+                     (is (=     0   (entry-count namespace env)))
+                     (is (equal '() (entries     namespace env)))))
+                 'computation.environment::namespace env)))
