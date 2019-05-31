@@ -5,6 +5,10 @@
 
 * TODO Tutorial
 
+  #+BEGIN_SRC lisp :exports results :results silent
+    (ql:quickload :computation.environment)
+  #+END_SRC
+
 ** TODO Making environments
 
    #+BEGIN_SRC lisp :exports both
@@ -27,7 +31,8 @@
    #+END_SRC
 
    #+RESULTS:
-   : FUNCTION FOO not found in #<GLOBAL-ENVIRONMENT 1 namespace {1007E13A63}>
+   : An entry for name FOO does not exist in namespace FUNCTION in environment
+   : #<GLOBAL-ENVIRONMENT 1 namespace {1009D8D703}>
 
    #+BEGIN_SRC lisp :exports both
      (computation.environment:entries 'function *environment*)
@@ -39,11 +44,28 @@
 ** TODO Adding bindings
 
    #+BEGIN_SRC lisp :exports both
+     (setf (computation.environment:lookup 'foo 'function *environment*) :foo)
      (handler-case
          (computation.environment:lookup 'foo 'function *environment*)
        (error (condition)
          (princ-to-string condition)))
    #+END_SRC
+
+   #+RESULTS:
+   : :FOO
+
+   #+BEGIN_SRC lisp :exports both
+     (let ((augmented (computation.environment:augmented-namespace
+                       ,*environment* 'function '(bar) '(:bar)
+                       :class 'computation.environment::lexical-environment)))
+       (handler-case
+           (computation.environment:lookup 'bar 'function augmented)
+         (error (condition)
+           (princ-to-string condition))))
+   #+END_SRC
+
+   #+RESULTS:
+   : :BAR
 
 
 * TODO Dictionary
