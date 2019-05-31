@@ -12,11 +12,12 @@
   ((%namespaces :initform (make-hash-table :test #'eq))))
 
 (defmethod initialize-instance :after ((instance global-environment) &key)
-  (let ((namespaces (%namespaces instance)))
-    (setf (gethash **meta-namespace** (%bindings instance))
-          (make-bindings (load-time-value (c2mop:class-prototype
-                                           (c2mop:ensure-finalized
-                                            (find-class 'eq-hash-table-bindings-mixin))))
-                         instance)
-          (gethash 'namespace namespaces)
-          **meta-namespace**)))
+  (let ((namespaces (%namespaces instance))
+        (bindings   (make-bindings (load-time-value
+                                    (c2mop:class-prototype
+                                     (c2mop:ensure-finalized
+                                      (find-class 'eq-hash-table-bindings-mixin))))
+                                   instance)))
+    (setf (gethash **meta-namespace** (%bindings instance)) bindings
+          (gethash 'namespace         bindings)             **meta-namespace**
+          (gethash 'namespace         namespaces)           **meta-namespace**)))
