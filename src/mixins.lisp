@@ -33,7 +33,7 @@
 
 (macrolet ((do-it (function namespace environment)
              `(when-let ((bindings (namespace-bindings ,namespace ,environment)))
-                (map-entries-in-bindings function bindings ,namespace ,environment))))
+                (map-entries-in-bindings ,function bindings ,namespace ,environment))))
 
   (defmethod map-direct-entries ((function    function)
                                  (namespace   t)
