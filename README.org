@@ -1,27 +1,60 @@
 #+SEQ_TODO: TODO STARTED | DONE
 #+OPTIONS: num:nil
 
-* TODO Introduction
+* STARTED Introduction
 
-* TODO Tutorial
+  The ~compoutation.environment~ library provides protocols and
+  implementations for environments, that is data structures which
+  bindings of names to values. Different kinds of environments are
+  available:
+
+  + Global environments
+  + Lexical environments
+
+  Lexical environments can be organized in a hierarchy such that child
+  environments inherit entries from their ancestors.
+
+  Another feature are first-class namespaces: environments contain
+  namespace which in turn control how names are organized and
+  processed within the environment.
+
+* TODO Concepts
+
+  + namespace ::
+
+    + Name syntax
+
+    + Name comparison
+
+    + Entry isolation
+
+  + environment ::
+
+  + binding ::
+
+* STARTED Tutorial
 
   #+BEGIN_SRC lisp :exports results :results silent
     (ql:quickload :computation.environment)
   #+END_SRC
 
-** TODO Making environments
+** STARTED Making environments
 
-   #+BEGIN_SRC lisp :exports both
+   #+BEGIN_SRC lisp :exports both :results output
      (defvar *environment* (make-instance 'computation.environment:global-environment))
+
      (setf (computation.environment:lookup 'function 'computation.environment::namespace *environment*)
            (make-instance 'computation.environment::eq-namespace))
-     *environment*
+
+     (describe *environment*)
    #+END_SRC
 
    #+RESULTS:
-   : #<GLOBAL-ENVIRONMENT 1 namespace {1007E13A63}>
+   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {10033D6253}>
+   :
+   :
 
-** TODO Looking up bindings
+** STARTED Looking up bindings
 
    #+BEGIN_SRC lisp :exports both
      (handler-case
@@ -39,9 +72,20 @@
    #+END_SRC
 
    #+RESULTS:
-   : NIL
+   : ((FOO . :FOO))
 
-** TODO Adding bindings
+** STARTED Adding bindings
+
+   New bindings can be created in two ways
+
+   1. Destructively modifying a given environment by adding the new
+      binding to it
+
+   2. Creating a new environment object that contains the new binding
+      and is linked to the existing environment object
+
+   The first way can be achieved using the ~(setf
+   computation.environment:lookup)~ generic function:
 
    #+BEGIN_SRC lisp :exports both
      (setf (computation.environment:lookup 'foo 'function *environment*) :foo)
@@ -54,10 +98,15 @@
    #+RESULTS:
    : :FOO
 
-   #+BEGIN_SRC lisp :exports both
+   The functions ~computation.environment:augmented-environment~ and
+   ~computation.environment:augmented-namespace~ implement the second
+   way:
+
+   #+BEGIN_SRC lisp :exports both :results output
      (let ((augmented (computation.environment:augmented-namespace
                        ,*environment* 'function '(bar) '(:bar)
                        :class 'computation.environment::lexical-environment)))
+                       (describe augmented)
        (handler-case
            (computation.environment:lookup 'bar 'function augmented)
          (error (condition)
@@ -65,7 +114,41 @@
    #+END_SRC
 
    #+RESULTS:
-   : :BAR
+   : #<COMPUTATION.ENVIRONMENT:LEXICAL-ENVIRONMENT @1 {1014271413}>
+   :
+   :   EQ-NAMESPACE COMMON-LISP:FUNCTION 2 entries
+   :     BAR → :BAR
+   :     FOO → :FOO [inherited]
 
+   but the original environment is not affected:
+
+   #+BEGIN_SRC lisp :exports both :results output
+   (describe *environment*)
+   #+END_SRC
+
+   #+RESULTS:
+   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {1016184C33}>
+   :
+   :   EQ-NAMESPACE COMMON-LISP:FUNCTION 1 entry
+   :     FOO → :FOO
+
+** TODO Shadowing
+
+   #+BEGIN_SRC lisp :exports both :results output
+     (let ((augmented (computation.environment:augmented-namespace
+                       ,*environment* 'function '(foo) '(:foo)
+                       :class 'computation.environment::lexical-environment)))
+                       (describe *environment*)
+       (terpri)
+       (describe augmented))
+   #+END_SRC
+
+   #+RESULTS:
+   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {1016184C33}>
+   :
+   :
+   : #<COMPUTATION.ENVIRONMENT:LEXICAL-ENVIRONMENT @1 {100CB3FEC3}>
+   :
+   :
 
 * TODO Dictionary
