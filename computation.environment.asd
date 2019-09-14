@@ -26,7 +26,9 @@
                               (:file       "global-environment")
                               (:file       "lexical-environment")
 
-                              (:file       "augment"))))
+                              (:file       "augment")
+
+                              (:file       "print"))))
   :in-order-to ((test-op (test-op "computation.environment/test"))))
 
 (defsystem "computation.environment/test"
