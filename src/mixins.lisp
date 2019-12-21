@@ -40,9 +40,9 @@
                                  (environment bindings-mixin))
     (do-it function namespace environment))
 
-  (defmethod map-entries ((function    function)
-                          (namespace   t)
-                          (environment bindings-mixin))
+  (defmethod map-effective-entries ((function    function)
+                                    (namespace   t)
+                                    (environment bindings-mixin))
     (do-it function namespace environment)))
 
 (macrolet ((do-it (name namespace environment)
@@ -76,7 +76,10 @@
 (#+sbcl sb-ext:defglobal #-sbcl defvar **meta-namespace**
   (make-instance 'eq-namespace))
 
-(defclass meta-namespace-lookup-mixin ()
+(defclass equal-namespace (equal-hash-table-bindings-mixin)
+  ())
+
+(defclass meta-namespace-lookup-mixin () ; TODO either remove the slot or initialize it
   ((%namespaces :initarg  :namespaces
                 :accessor %namespaces)))
 
@@ -95,6 +98,12 @@
                           (environment meta-namespace-lookup-mixin))
     (let ((namespace (ensure-namespace environment namespace)))
       (map-entries function namespace environment)))
+
+  (defmethod map-effective-entries ((function    function)
+                                    (namespace   symbol)
+                                    (environment meta-namespace-lookup-mixin))
+    (let ((namespace (ensure-namespace environment namespace)))
+      (map-effective-entries function namespace environment)))
 
   (defmethod entries ((namespace   symbol)
                       (environment meta-namespace-lookup-mixin))
@@ -158,16 +167,23 @@
 (defmethod map-entries ((function    function)
                         (namespace   t)
                         (environment hierarchical-environment-mixin))
-  (map-direct-entries function namespace environment)
+  (map-direct-entries (rcurry function environment) namespace environment)
   (when-let ((parent (parent environment)))
     (map-entries function namespace parent)))
 
-(defmethod entries ((namespace   t)
-                    (environment hierarchical-environment-mixin))
+(defmethod map-effective-entries ((function    function)
+                                  (namespace   t)
+                                  (environment hierarchical-environment-mixin))
   (if-let ((parent (parent environment)))
-    (append (direct-entries namespace environment)
-            (entries namespace parent))
-    (direct-entries namespace environment)))
+    (let ((seen (make-hash-table :test #'eq))) ; TODO depends on namespace
+      (flet ((visit (name value)
+               (unless (gethash name seen)
+                 (setf (gethash name seen) t)
+                 (funcall function name value))))
+        (declare (dynamic-extent #'visit))
+        (map-direct-entries #'visit namespace environment)
+        (map-effective-entries #'visit namespace parent)))
+    (map-direct-entries function namespace environment)))
 
 (defmethod lookup ((name        t)
                    (namespace   t)
@@ -179,10 +195,23 @@
   (multiple-value-bind (value defined?)
       (direct-lookup name namespace environment ; :if-does-not-exist if-does-not-exist
                      )
-    (if defined?
-        (values value defined?)
-        (when-let ((parent (parent environment)))
-          (lookup name namespace parent :if-does-not-exist nil)))))
+    (cond ((eq defined? t)
+           (values value defined?))
+          ((eq value +unbound+)
+           (values nil nil))
+          (t
+           (when-let ((parent (parent environment)))
+             (lookup name namespace parent :if-does-not-exist nil))))))
+
+;;; `bindings+hierarchical-environment-mixin'
+
+(defclass bindings+hierarchical-environment-mixin
+    (bindings-mixin
+     hierarchical-environment-mixin)
+  ())
+
+#+later (defmethod make-bindings ((namespace   )
+                          (environment )))
 
 ;;; `ensure-using-existing-mixin'
 

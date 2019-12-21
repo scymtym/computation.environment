@@ -57,3 +57,25 @@
 (defmethod make-bindings ((namespace   eq-hash-table-bindings-mixin)
                           (environment t))
   (make-hash-table :test #'eq))
+
+;;; `hierarchical-hash-table-bindings-mixin'
+
+(defconstant +unbound+ '%unbound%)
+
+(defclass hierarchical-hash-table-bindings-mixin ()
+  ())
+
+(defmethod entry-count-in-bindings ((bindings    hash-table)
+                                    (namespace   hierarchical-hash-table-bindings-mixin)
+                                    (environment t))
+  (- (hash-table-count bindings)
+     (count +unbound+ (hash-table-values bindings) :test #'eq))) ; TODO track this
+
+#+later (defmethod map-entries-in-bindings ((function    function)
+                                            (bindings    hash-table)
+                                            (namespace   hierarchical-hash-table-bindings-mixin)
+                                            (environment t))
+          (maphash (lambda (name value)
+                     (unless (eq value +unbound+)
+                       (funcall function name value)))
+                   bindings))

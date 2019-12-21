@@ -10,7 +10,11 @@
 
 (defgeneric make-bindings (namespace environment))
 
-(defgeneric entries-in-bindings (bindings namespace environment))
+(defgeneric entry-count-in-bindings (bindings namespace environment))
+
+(defgeneric map-entries-in-bindings (function bindings namespace environment))
+
+(defgeneric entries-in-bindings (bindings namespace environment)) ; TODO remove
 
 (defgeneric lookup-in-bindings (name bindings namespace environment))
 
@@ -28,6 +32,14 @@
   (:documentation
    "Return an alist of entries in NAMESPACE in ENVIRONMENT."))
 
+(defgeneric map-effective-entries (function namespace environment)
+  (:documentation
+   "TODO"))
+
+(defgeneric effective-entries (namespace environment)
+  (:documentation
+   "TODO"))
+
 (defgeneric lookup (name namespace environment
                     &key
                     if-does-not-exist
@@ -44,25 +56,41 @@
     IF-EXISTS is accepted and ignored for parity with `(setf
     lookup)'."))
 
-(defgeneric (setf lookup) (new-value name namespace environment
+(defgeneric (setf lookup) (new-value name namespace environment ; TODO separate mutable environment protocol?
                            &key
                            if-does-not-exist
                            if-exists)
   (:documentation
    "Set the value of (NAME NAMESPACE) in ENVIRONMENT to NEW-VALUE."))
 
-(defgeneric make-or-update (name namespace environment make-cont update-cont))
+(defgeneric make-or-update (name namespace environment make-cont update-cont)
+  (:documentation
+   "TODO"))
 
-(defgeneric ensure (name namespace environment make-cont))
+(defgeneric ensure (name namespace environment make-cont)
+  (:documentation
+   "TODO"))
 
 ;;; Default behavior
 
 (defmethod entries ((namespace t) (environment t))
   (let ((result '()))
-    (flet ((collect (name value)
+    (flet ((collect (name value scope)
+             (declare (ignore scope)) ; TODO include scope in result?
              (push (cons name value) result)))
       (declare (dynamic-extent #'collect))
       (map-entries #'collect namespace environment))
+    result))
+
+(defmethod map-entries ((function function) (namespace t) (environment t))
+  (map-effective-entries (rcurry function environment) namespace environment))
+
+(defmethod effective-entries ((namespace t) (environment t))
+  (let ((result '()))
+    (flet ((collect (name value)
+             (push (cons name value) result)))
+      (declare (dynamic-extent #'collect))
+      (map-effective-entries #'collect namespace environment))
     result))
 
 (defmethod lookup :around ((name      t)
@@ -118,6 +146,7 @@
 (defgeneric direct-entries (namespace environment))
 
 ;;; TODO alternatively add &key scope to lookup where :scope t => lookup, :scope 1 => direct-lookup, :scope 2 => direct and parent, ...
+;;; TODO second alternative: add &key filter which gets called with each environment before its entries are considered
 (defgeneric direct-lookup (name namespace environment))
 
 ;;; Default behavior

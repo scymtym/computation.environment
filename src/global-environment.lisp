@@ -13,11 +13,11 @@
 
 (defmethod initialize-instance :after ((instance global-environment) &key)
   (let ((namespaces (%namespaces instance))
-        (bindings   (make-bindings (load-time-value
+        #+no (bindings   (make-bindings (load-time-value
                                     (c2mop:class-prototype
                                      (c2mop:ensure-finalized
                                       (find-class 'eq-hash-table-bindings-mixin))))
                                    instance)))
-    (setf (gethash **meta-namespace** (%bindings instance)) bindings
-          (gethash 'namespace         bindings)             **meta-namespace**
+    (setf (gethash **meta-namespace** (%bindings instance)) #+no bindings namespaces
+          ;; (gethash 'namespace         bindings)             **meta-namespace**
           (gethash 'namespace         namespaces)           **meta-namespace**)))

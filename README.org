@@ -50,8 +50,9 @@
    #+END_SRC
 
    #+RESULTS:
-   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {10033D6253}>
+   : #<GLOBAL-ENVIRONMENT 1 namespace {10028B3063}>
    :
+   :   EQ-NAMESPACE COMMON-LISP:FUNCTION 0 entries
    :
 
 ** STARTED Looking up bindings
@@ -65,14 +66,14 @@
 
    #+RESULTS:
    : An entry for name FOO does not exist in namespace FUNCTION in environment
-   : #<GLOBAL-ENVIRONMENT 1 namespace {1009D8D703}>
+   : #<GLOBAL-ENVIRONMENT 1 namespace {10028B3063}>
 
    #+BEGIN_SRC lisp :exports both
      (computation.environment:entries 'function *environment*)
    #+END_SRC
 
    #+RESULTS:
-   : ((FOO . :FOO))
+   : NIL
 
 ** STARTED Adding bindings
 
@@ -89,10 +90,7 @@
 
    #+BEGIN_SRC lisp :exports both
      (setf (computation.environment:lookup 'foo 'function *environment*) :foo)
-     (handler-case
-         (computation.environment:lookup 'foo 'function *environment*)
-       (error (condition)
-         (princ-to-string condition)))
+     (computation.environment:lookup 'foo 'function *environment*)
    #+END_SRC
 
    #+RESULTS:
@@ -104,9 +102,10 @@
 
    #+BEGIN_SRC lisp :exports both :results output
      (let ((augmented (computation.environment:augmented-namespace
-                       ,*environment* 'function '(bar) '(:bar)
+                       *environment* 'function '(bar) '(:bar)
                        :class 'computation.environment::lexical-environment)))
-                       (describe augmented)
+       (describe augmented)
+       (clouseau:inspect augmented :new-process t)
        (handler-case
            (computation.environment:lookup 'bar 'function augmented)
          (error (condition)
@@ -114,20 +113,20 @@
    #+END_SRC
 
    #+RESULTS:
-   : #<COMPUTATION.ENVIRONMENT:LEXICAL-ENVIRONMENT @1 {1014271413}>
+   : #<LEXICAL-ENVIRONMENT 1 namespace @1 {1011E28F13}>
    :
    :   EQ-NAMESPACE COMMON-LISP:FUNCTION 2 entries
    :     BAR → :BAR
-   :     FOO → :FOO [inherited]
+   :     FOO → :FOO [inherited from #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>]
 
    but the original environment is not affected:
 
    #+BEGIN_SRC lisp :exports both :results output
-   (describe *environment*)
+     (describe *environment*)
    #+END_SRC
 
    #+RESULTS:
-   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {1016184C33}>
+   : #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>
    :
    :   EQ-NAMESPACE COMMON-LISP:FUNCTION 1 entry
    :     FOO → :FOO
@@ -136,19 +135,25 @@
 
    #+BEGIN_SRC lisp :exports both :results output
      (let ((augmented (computation.environment:augmented-namespace
-                       ,*environment* 'function '(foo) '(:foo)
+                       ,*environment* 'function '(foo) '(:bar)
                        :class 'computation.environment::lexical-environment)))
-                       (describe *environment*)
-       (terpri)
-       (describe augmented))
+       (describe *environment*)
+       (terpri) (terpri)
+       (describe augmented) (clouseau:inspect augmented :new-process t))
    #+END_SRC
 
    #+RESULTS:
-   : #<COMPUTATION.ENVIRONMENT:GLOBAL-ENVIRONMENT {1016184C33}>
-   :
-   :
-   : #<COMPUTATION.ENVIRONMENT:LEXICAL-ENVIRONMENT @1 {100CB3FEC3}>
-   :
-   :
+   #+begin_example
+   #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>
+
+     EQ-NAMESPACE COMMON-LISP:FUNCTION 1 entry
+       FOO → :FOO
+
+   #<LEXICAL-ENVIRONMENT 1 namespace @1 {1005097E73}>
+
+     EQ-NAMESPACE COMMON-LISP:FUNCTION 2 entries
+       FOO → :BAR
+       FOO → :FOO [inherited from #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>]
+   #+end_example
 
 * TODO Dictionary

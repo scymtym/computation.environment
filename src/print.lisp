@@ -59,7 +59,8 @@
   (let ((result      '())
         (entry-count 0)
         (name-width  0))
-    (map-entries (lambda (name value scope) (declare (ignore scope))
+    (map-entries (lambda (name value scope)
+                   (declare (ignore scope))
                    (when (eql entry-count count)
                      (return-from entries-for-describe
                        (values result nil name-width)))

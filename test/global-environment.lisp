@@ -15,3 +15,7 @@
   (let ((env (make-instance 'global-environment)))
     (is (=     0   (entry-count 'function env)))
     (is (equal '() (entries 'function env)))))
+
+(let ((env (make-instance 'global-environment)))
+  (list (lookup 'computation.environment::namespace 'computation.environment::namespace env)
+        (entries 'computation.environment::namespace env)))
