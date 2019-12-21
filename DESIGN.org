@@ -1,0 +1,180 @@
+#+OPTIONS: toc:nil num:nil
+#+SEQ_TODO: TODO STARTED | DONE
+
+#+MACRO: term /$1$2/
+
+* Glossary
+
+  + namespace ::
+
+  + environment ::
+
+  + binding ::
+
+  + shadowing ::
+  + key ::
+
+  + value ::
+
+  + entry ::
+
+  + scope :: A description of the subset of environments in a
+             hierarchy of environments that are considered for an
+             operation.
+
+             Example: A lookup with "direct" scope considers the
+             bindings of the specified environment but not any
+             bindings in ancestor environment of the given
+             environment.
+
+* Requirements
+
+** TODO Looking up an entry by name
+
+** TODO Putting a new entry into an environment
+
+   destructive?
+
+** TODO Ensuring an entry exists in an environment
+
+   Without computing the value eagerly
+
+   Updating the existing entry if it is not adequate
+
+** TODO Map over entries
+
+   As a client, I can map my function over all entries of an
+   {{{term(environment)}}}.
+
+   + All namespaces vs. one namespace
+
+   + Direct entries vs. inherited from parent
+
+   + Effective entries vs. shadowing
+
+** TODO Arbitrary namespaces
+
+   As a client, I can register arbitrary {{{term(namespace,s)}}} for a
+   given {{{term(environment)}}} and perform all operations (put,
+   lookup, map, …)  on them. I expect the sets of entries for two
+   distinct namespaces to be independent of each other.
+
+** TODO Arbitrary namespace keys
+
+   As a client, I can use arbitrary keys for a namespace and specify
+   how lookups for this kind of key should work.
+
+** TODO Hierarchical environments
+
+   As a client, I can make a kind of environment that has an
+   associated parent environment such that a kind of lookup that
+   traverses ancestors until an entry is found or the root is reached
+   can be performed.
+
+** TODO Unbound entries and shadowing (See [[*Removing Entries]])
+
+   As a client, I can make a key appear unbound in a given environment
+   even if there is a binding for the in an ancestor of the
+   environment.
+
+** TODO Efficiency
+
+   Important operations that should be efficient (in order of
+   anticipated  importance):
+
+   1. Looking up an entry for a given key
+
+   2. Adding an entry to an environment
+
+   3. Making a child environment
+
+   4. Removing an entry from an environment
+
+** TODO Atomic/transactional updates?
+
+* Design Considerations
+
+** TODO Removing Entries
+
+   1. What should the interface be?
+
+   2. For hierarchical environments, children should be able
+      "suppress" entries that exist in parents
+
+** STARTED How to represent {{{term(scope)}}} in protocols?
+
+   The first alternative would be a-priori determining all possible
+   scopes and defining families of generic functions:
+
+   #+BEGIN_SRC lisp
+     ;;; direct scope
+
+     (defgeneric map-direct-entries (function namespace environment))
+
+     (defgeneric direct-lookup (key namespace environment))
+
+     ;;; effective scope
+
+     (defgeneric map-effective-entries (function namespace environment))
+
+     (defgeneric effective-lookup (key namespace environment))
+   #+END_SRC
+
+   The second alternative would be making the scope a parameter of the
+   each operation in the protocol:
+
+   #+BEGIN_SRC lisp
+     (defgeneric map-entries (function namespace environment scope))
+
+     (defgeneric lookup (key namespace environment scope))
+   #+END_SRC
+
+   #+BEGIN_SRC lisp
+     (defgeneric map-entries (function namespace environment &key scope))
+
+     (defgeneric map-entries-using-scope (function namespace environment scope))
+
+     (defgeneric lookup (key namespace environment &key scope))
+
+     (defgeneric lookup-using-scope (key namespace environment scope))
+   #+END_SRC
+
+* Data Structures
+
+** Non-hierarchical Case
+
+   #+BEGIN_EXAMPLE
+     > (direct-lookup name namespace environment)
+       >             (ensure-namespace environment namespace)          ; meta-namespace-lookup-mixin
+       < namespace ← (ensure-namespace environment namespace)
+       >            (namespace-bindings namespace environment)
+       < bindings ← (namespace-bindings namespace environment)
+       > (lookup-in-bindings name bindings namespace environment)
+       < (lookup-in-bindings name bindings namespace environment)
+     < (direct-lookup name namespace environment)
+   #+END_EXAMPLE
+
+   #+BEGIN_EXAMPLE
+     > (make-or-update name namespace environment make-cont update-cont)
+       >                (lookup name namespace environment :if-does-not-exist nil)
+       < value value? ← (lookup name namespace environment :if-does-not-exist nil)
+       if value?
+         >                        (update-cont value)
+         < new-value new-value? ← (update-cont value)
+       else
+         >                        (make-cont)
+         < new-value new-value? ← (make-cont value) t
+       end
+       > (setf (lookup name namespace environment) new-value)
+       < (setf (lookup name namespace environment) new-value)
+     < (make-or-update name namespace environment make-cont update-cont)
+   #+END_EXAMPLE
+
+   #+BEGIN_EXAMPLE
+     > (ensure name namespace environment make-cont)
+       > (make-or-update name namespace environment make-cont #'identity)
+       < (make-or-update name namespace environment make-cont #'identity)
+     < (ensure name namespace environment make-cont)
+   #+END_EXAMPLE
+
+** Hierarchical Case
