@@ -1,6 +1,6 @@
 ;;;; computation.environment.asd --- System definition for the computation.environment system
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -31,8 +31,16 @@
                               (:file       "print"))))
   :in-order-to ((test-op (test-op "computation.environment/test"))))
 
+(defsystem "computation.environment/examples"
+  :depends-on  ("computation.environment")
+
+  :components  ((:module     "example"
+                 :serial     t
+                 :components ((:file       "defclass")))))
+
 (defsystem "computation.environment/test"
   :depends-on  ("computation.environment"
+                ; "computation.environment/examples"
 
                 "fiveam")
 
