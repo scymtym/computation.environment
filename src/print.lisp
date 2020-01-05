@@ -1,6 +1,6 @@
 ;;;; print.lisp --- Printing and describing environment objects.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -21,8 +21,9 @@
 (defmethod describe-namespaces ((environment t) (stream t))
   (pprint-logical-block (stream (list environment) :per-line-prefix "  ")
     (let ((first? t))
-      (map-effective-entries
-       (lambda (name namespace)
+      (map-entries
+       (lambda (name namespace container)
+         (declare (ignore container))
          (unless (eq name 'namespace)
            (if first?
                (setf first? nil)

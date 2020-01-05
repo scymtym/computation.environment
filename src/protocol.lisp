@@ -1,6 +1,6 @@
 ;;;; protocol.lisp --- Protocol provided by the computation.environment system.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -37,32 +37,54 @@
 
 ;;; TODO accessors for namespaces (direct and indirect?)
 
-(defgeneric entry-count (namespace environment))
+(defmacro define-scoped-protocol-function (name lambda-list &rest options)
+  (multiple-value-bind (required optional rest keys)
+      (parse-ordinary-lambda-list lambda-list)
+    (when optional
+      (error "Cannot use ~S parameters" '&optional))
+    (when rest
+      (error "Cannot use ~S parameter" '&rest))
+    (let* ((using-scope-name        (symbolicate name '#:-using-scope))
+           (key-parameters/defaults (map 'list #'butlast keys))
+           (key-parameters          (map 'list #'butlast
+                                         key-parameters/defaults)))
+      `(progn
+         (defgeneric ,name (,@required &key ,@key-parameters scope)
+           (:method (,@(map 'list (rcurry #'list t) required)
+                     &key ,@key-parameters/defaults (scope t))
+             (,using-scope-name
+              ,@required scope
+              ,@(mappend (lambda (parameter)
+                           (destructuring-bind ((keyword var)) parameter
+                             (list keyword var)))
+                         key-parameters)))
+           ,@options)
+         (defgeneric ,using-scope-name (,@required scope
+                                        ,@(when key-parameters
+                                            `(&key ,@key-parameters)))
+           ,@options)))))
 
-(defgeneric map-entries (function namespace environment))
-
-(defgeneric entries (namespace environment)
+(define-scoped-protocol-function entry-count (namespace environment)
   (:documentation
-   "Return an alist of entries in NAMESPACE in ENVIRONMENT."))
+   "Return the number of entries in NAMESPACE in ENVIRONMENT for SCOPE."))
 
-(defgeneric map-effective-entries (function namespace environment)
+(define-scoped-protocol-function map-entries (function namespace environment)
   (:documentation
-   "Call FUNCTION for each entry in NAMESPACE in ENVIRONMENT.
+   "Call FUNCTION for each entry in NAMESPACE in ENVIRONMENT for SCOPE.
 
     The lambda list of FUNCTION must be compatible with
 
       (name value container)"))
 
-(defgeneric effective-entries (namespace environment)
+(define-scoped-protocol-function entries (namespace environment)
   (:documentation
-   "TODO"))
+   "Return entries in NAMESPACE in ENVIRONMENT for SCOPE as an alist."))
 
-(defgeneric lookup (name namespace environment
-                    &key
-                    if-does-not-exist
-                    if-exists)
+(define-scoped-protocol-function lookup (name namespace environment
+                                         &key (if-does-not-exist #'error)
+                                              if-exists)
   (:documentation
-   "Lookup and return the value for NAME in NAMESPACE in ENVIRONMENT.
+   "Lookup and return the value for NAME in NAMESPACE in ENVIRONMENT for SCOPE.
 
     Return two values: 1) the found value (subject to
     IF-DOES-NOT-EXIST) 2) a Boolean indicating whether a value exists.
@@ -74,13 +96,13 @@
     lookup)'."))
 
 (defgeneric (setf lookup) (new-value name namespace environment ; TODO separate mutable environment protocol?
-                           &key
-                           if-does-not-exist
-                           if-exists)
+                           &key if-does-not-exist
+                                if-exists)
   (:documentation
-   "Set the value of (NAME NAMESPACE) in ENVIRONMENT to NEW-VALUE."))
+   "Set the value of NAME in NAMESPACE in ENVIRONMENT to NEW-VALUE."))
 
-(defgeneric make-or-update (name namespace environment make-cont update-cont)
+(defgeneric make-or-update (name namespace environment make-cont update-cont
+                            &key scope)
   (:documentation
    "TODO
 
@@ -92,38 +114,28 @@
     based on OLD-VALUE 2) a Boolean indicating whether the first
     return value is different from OLD-VALUE."))
 
-(defgeneric ensure (name namespace environment make-cont)
+(defgeneric ensure (name namespace environment make-cont &key scope)
   (:documentation
    "TODO"))
 
 ;;; Default behavior
 
-(defmethod entries ((namespace t) (environment t))
+(defmethod entries-using-scope ((namespace t) (environment t) (scope t))
   (let ((result '()))
-    (flet ((collect (name value scope)
-             (declare (ignore scope)) ; TODO include scope in result?
+    (flet ((collect (name value environment)
+             (declare (ignore environment))
              (push (cons name value) result)))
       (declare (dynamic-extent #'collect))
-      (map-entries #'collect namespace environment))
+      (map-entries-using-scope #'collect namespace environment scope))
     result))
 
-(defmethod map-entries ((function function) (namespace t) (environment t))
-  (map-effective-entries (rcurry function environment) namespace environment))
-
-(defmethod effective-entries ((namespace t) (environment t))
-  (let ((result '()))
-    (flet ((collect (name value)
-             (push (cons name value) result)))
-      (declare (dynamic-extent #'collect))
-      (map-effective-entries #'collect namespace environment))
-    result))
-
-(defmethod lookup :around ((name      t)
-                           (namespace t) ; standard-object
-                           (container t)
-                           &key
-                           (if-does-not-exist #'error)
-                           if-exists)
+(defmethod lookup-using-scope :around ((name      t)
+                                       (namespace t) ; standard-object
+                                       (container t)
+                                       (scope     t)
+                                       &key
+                                       (if-does-not-exist #'error)
+                                       if-exists)
   (declare (ignore if-exists))
   (multiple-value-bind (value value?) (call-next-method)
     (if value?
@@ -142,19 +154,22 @@
                            (namespace   t)
                            (environment t)
                            (make-cont   t)
-                           (update-cont t))
-  (multiple-value-bind (value value?) (lookup name namespace environment
-                                              :if-does-not-exist nil)
+                           (update-cont t)
+                           &key (scope t))
+  (multiple-value-bind (value value? container)
+      (lookup name namespace environment
+              :scope scope :if-does-not-exist nil)
     (multiple-value-bind (new-value new-value?)
         (if value?
             (funcall update-cont value)
             (values (funcall make-cont) t))
       (if new-value?
-          (values (setf (lookup name namespace environment) new-value) t)
-          (values value                                                nil)))))
+          (values (setf (lookup name namespace container) new-value) t)
+          (values value                                              nil)))))
 
-(defmethod ensure ((name t) (namespace t) (environment t) (make-cont t))
-  (make-or-update name namespace environment make-cont #'identity))
+(defmethod ensure ((name t) (namespace t) (environment t) (make-cont t)
+                   &key (scope t))
+  (make-or-update name namespace environment make-cont #'identity :scope scope))
 
 ;;; Hierarchical environment protocol
 
@@ -165,16 +180,6 @@
    "Return the ancestor of ENVIRONMENT that has no parent."))
 
 (defgeneric depth (environment))
-
-(defgeneric direct-entry-count (namespace environment))
-
-(defgeneric map-direct-entries (function namespace environment))
-
-(defgeneric direct-entries (namespace environment))
-
-;;; TODO alternatively add &key scope to lookup where :scope t => lookup, :scope 1 => direct-lookup, :scope 2 => direct and parent, ...
-;;; TODO second alternative: add &key filter which gets called with each environment before its entries are considered
-(defgeneric direct-lookup (name namespace environment))
 
 ;;; Default behavior
 
@@ -190,14 +195,6 @@
   (if-let ((parent (parent environment)))
     (1+ (depth parent))
     0))
-
-(defmethod direct-entries ((namespace t) (environment t))
-  (let ((result '()))
-    (flet ((collect (name value)
-             (push (cons name value) result)))
-      (declare (dynamic-extent #'collect))
-      (map-direct-entries #'collect namespace environment))
-    result))
 
 ;;; Entry update protocol
 

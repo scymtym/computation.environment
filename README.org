@@ -43,6 +43,13 @@
   + Binding :: An association of a /name/ in a /namespace/ and a
                value.
 
+  + scope :: A scopes controls the way in which a value is looked up
+             for a given name, /namespace/ and /environment/.
+
+             As a concrete example, the /direct/ scope constrains the
+             lookup to the specified environment, that is ancestors of
+             the environment are not considered.
+
 * STARTED Tutorial
 
   #+BEGIN_SRC lisp :exports results :results silent

@@ -41,13 +41,7 @@
   (:export
    #:parent
    #:root
-   #:depth
-
-   #:direct-entry-count
-   #:map-direct-entries
-   #:direct-entries
-
-   #:direct-lookup)
+   #:depth)
 
   ;; Class standard-environment
   (:export
