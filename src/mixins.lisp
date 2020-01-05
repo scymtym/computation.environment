@@ -1,6 +1,9 @@
 (cl:in-package #:computation.environment)
 
 ;;; `bindings-mixin'
+;;;
+;;; An environment mixin that adds binding storage to environment
+;;; instances.
 
 (defclass bindings-mixin ()
   ((%bindings :reader   %bindings
@@ -67,7 +70,7 @@
   (let ((bindings (ensure-namespace-bindings namespace environment)))
     (setf (lookup-in-bindings name bindings namespace environment) new-value)))
 
-;;; `meta-namespace-mixin'
+;;; `meta-namespace-lookup-mixin'
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defclass eq-namespace (eq-hash-table-bindings-mixin)
