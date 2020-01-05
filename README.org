@@ -40,17 +40,20 @@
 
 ** STARTED Making environments
 
+   This library provides different kinds of environments such as
+   ~global-environment~.
+
    #+BEGIN_SRC lisp :exports both :results output
      (defvar *environment* (make-instance 'computation.environment:global-environment))
 
-     (setf (computation.environment:lookup 'function 'computation.environment::namespace *environment*)
+     (setf (computation.environment:lookup 'function 'computation.environment:namespace *environment*)
            (make-instance 'computation.environment::eq-namespace))
 
      (describe *environment*)
    #+END_SRC
 
    #+RESULTS:
-   : #<GLOBAL-ENVIRONMENT 1 namespace {10028B3063}>
+   : #<GLOBAL-ENVIRONMENT 1 namespace {100A817B03}>
    :
    :   EQ-NAMESPACE COMMON-LISP:FUNCTION 0 entries
    :
@@ -65,8 +68,8 @@
    #+END_SRC
 
    #+RESULTS:
-   : An entry for name FOO does not exist in namespace FUNCTION in environment
-   : #<GLOBAL-ENVIRONMENT 1 namespace {10028B3063}>
+   : An entry for name FOO does not exist in namespace #<EQ-NAMESPACE {100BDBF7B3}>
+   : in environment #<GLOBAL-ENVIRONMENT 1 namespace {100A817B03}>
 
    #+BEGIN_SRC lisp :exports both
      (computation.environment:entries 'function *environment*)
