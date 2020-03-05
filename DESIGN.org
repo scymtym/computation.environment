@@ -12,6 +12,7 @@
   + binding ::
 
   + shadowing ::
+
   + key ::
 
   + value ::
@@ -27,19 +28,31 @@
              bindings in ancestor environment of the given
              environment.
 
-* Requirements
+* Requirements [0/10]
 
-** TODO Looking up an entry by name
+** STARTED Looking up an entry by name
 
-** TODO Putting a new entry into an environment
+   + [X] Implement
+   + [ ] Test
+   + [ ] Document
+
+** STARTED Putting a new entry into an environment
 
    destructive?
 
-** TODO Ensuring an entry exists in an environment
+   + [X] Implement
+   + [ ] Test
+   + [ ] Document
+
+** STARTED Ensuring an entry exists in an environment
 
    Without computing the value eagerly
 
    Updating the existing entry if it is not adequate
+
+   + [ ] Implement
+   + [ ] Test
+   + [ ] Document
 
 ** TODO Map over entries
 
@@ -51,6 +64,10 @@
    + Direct entries vs. inherited from parent
 
    + Effective entries vs. shadowing
+
+   + [ ] Implement
+   + [ ] Test
+   + [ ] Document
 
 ** TODO Arbitrary namespaces
 
@@ -128,6 +145,8 @@
 
      (defgeneric lookup (key namespace environment scope))
    #+END_SRC
+
+   Or more conveniently:
 
    #+BEGIN_SRC lisp
      (defgeneric map-entries (function namespace environment &key scope))

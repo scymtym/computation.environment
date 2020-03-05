@@ -5,8 +5,8 @@
 
   The ~compoutation.environment~ library provides protocols and
   implementations for environments, that is data structures which
-  bindings of names to values. Different kinds of environments are
-  available:
+  manage bindings of names to values. Different kinds of environments
+  are available:
 
   + Global environments
   + Lexical environments
@@ -15,22 +15,33 @@
   environments inherit entries from their ancestors.
 
   Another feature are first-class namespaces: environments contain
-  namespace which in turn control how names are organized and
+  namespaces which in turn control how names are organized and
   processed within the environment.
 
-* TODO Concepts
+* STARTED Concepts
 
-  + namespace ::
+  + Name :: Different kinds of names, different equalities
 
-    + Name syntax
+  + Namespace :: A namespace defines a particular kind of /name/ for
+                 which it controls
 
-    + Name comparison
+    + Name syntax :: Which objects are valid names in the namespace?
 
-    + Entry isolation
+    + Name comparison :: Given two objects which are valid names, how
+         to decide whether they designate the same name?
 
-  + environment ::
+         For example, ~name1~ and ~name2~ must be ~eq~ in order to
+         designate the same /variable name/. However, ~name1~ and
+         ~name2~ in ~(let ((name1 (list 'setf foo)) (name2 (list 'setf
+         foo))))~ are not ~eq~ yet still designate the same /function
+         name/.
 
-  + binding ::
+    + Entry isolation :: Not sure
+
+  + Environment ::
+
+  + Binding :: An association of a /name/ in a /namespace/ and a
+               value.
 
 * STARTED Tutorial
 
@@ -108,7 +119,6 @@
                        *environment* 'function '(bar) '(:bar)
                        :class 'computation.environment::lexical-environment)))
        (describe augmented)
-       (clouseau:inspect augmented :new-process t)
        (handler-case
            (computation.environment:lookup 'bar 'function augmented)
          (error (condition)
@@ -138,7 +148,7 @@
 
    #+BEGIN_SRC lisp :exports both :results output
      (let ((augmented (computation.environment:augmented-namespace
-                       ,*environment* 'function '(foo) '(:bar)
+                       *environment* 'function '(foo) '(:bar)
                        :class 'computation.environment::lexical-environment)))
        (describe *environment*)
        (terpri) (terpri)
@@ -159,4 +169,44 @@
        FOO → :FOO [inherited from #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>]
    #+end_example
 
-* TODO Dictionary
+* STARTED Dictionary
+
+  #+BEGIN_SRC lisp :results none :exports none :session "doc"
+    #.(progn
+        #1=(ql:quickload '(:computation.environment :alexandria :split-sequence))
+        '#1#)
+    (defun doc (symbol kind)
+      (let* ((lambda-list (sb-introspect:function-lambda-list symbol))
+             (string      (documentation symbol kind))
+             (lines       (split-sequence:split-sequence #\Newline string))
+             (trimmed     (mapcar (alexandria:curry #'string-left-trim '(#\Space)) lines)))
+        (format nil "~(~A~) ~<~{~A~^ ~}~:@>~2%~{~A~^~%~}"
+                symbol (list lambda-list) trimmed)))
+  #+END_SRC
+
+** STARTED The bindings protocol
+
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:make-bindings 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : make-bindings NAMESPACE ENVIRONMENT
+   :
+   : Return a bindings object for NAMESPACE in ENVIRONMENT.
+   :
+   : The returned object must be usable with NAMESPACE and ENVIRONMENT
+   : in the bindings protocol.
+
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:entry-count-in-bindings 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : entry-count-in-bindings BINDINGS NAMESPACE ENVIRONMENT
+   :
+   : Return the number of entries in BINDINGS in NAMESPACE, ENVIRONMENT.
+
+** TODO The environment protocol
+
+** TODO The hierarchical environment protocol
