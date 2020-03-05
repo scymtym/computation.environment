@@ -86,8 +86,13 @@
   (:documentation
    "Lookup and return the value for NAME in NAMESPACE in ENVIRONMENT for SCOPE.
 
-    Return two values: 1) the found value (subject to
-    IF-DOES-NOT-EXIST) 2) a Boolean indicating whether a value exists.
+    Return three values: 1) the found value (subject to
+    IF-DOES-NOT-EXIST) 2) a Boolean indicating whether a value exists
+    3) the environment in which the value was found.
+
+    SCOPE controls which bindings are considered. Examples of scopes
+    include binding directly contained in ENVIRONMENT and bindings
+    contained in ENVIRONMENT or any of its ancestor environments.
 
     IF-DOES-NOT-EXIST controls the behavior in case such a value does
     not exist.
@@ -137,9 +142,9 @@
                                        (if-does-not-exist #'error)
                                        if-exists)
   (declare (ignore if-exists))
-  (multiple-value-bind (value value?) (call-next-method)
+  (multiple-value-bind (value value? direct-container) (call-next-method)
     (if value?
-        (values value value?)
+        (values value value? direct-container)
         (typecase if-does-not-exist
           (function (let ((condition (make-condition
                                       'entry-does-not-exist-error
@@ -147,7 +152,7 @@
                                       :name        name
                                       :namespace   namespace)))
                       (funcall if-does-not-exist condition)))
-          (t        (values if-does-not-exist nil))))))
+          (t        (values if-does-not-exist nil nil))))))
 
 ;;; TODO could return three values: old, updated, new
 (defmethod make-or-update ((name        t)
@@ -156,20 +161,28 @@
                            (make-cont   t)
                            (update-cont t)
                            &key (scope t))
+  ;; 1. Look up an existing value.
   (multiple-value-bind (value value? container)
-      (lookup name namespace environment
-              :scope scope :if-does-not-exist nil)
-    (multiple-value-bind (new-value new-value?)
+      (lookup name namespace environment :scope             scope
+                                         :if-does-not-exist nil)
+    ;; 2. Update the existing value (may or may not yield a new value)
+    ;;    or make a value (yields a new value unconditionally).
+    (multiple-value-bind (new-value new-value? new-container)
         (if value?
-            (funcall update-cont value)
+            (funcall update-cont value container)
             (values (funcall make-cont) t))
+      ;; 3. If there is a new value, install it, otherwise return the
+      ;;    unchanged existing value.
       (if new-value?
-          (values (setf (lookup name namespace container) new-value) t)
-          (values value                                              nil)))))
+          (let ((new-container (or new-container environment)))
+            (setf (lookup name namespace new-container) new-value)
+            (values new-value t))
+          (values value nil)))))
 
 (defmethod ensure ((name t) (namespace t) (environment t) (make-cont t)
                    &key (scope t))
-  (make-or-update name namespace environment make-cont #'identity :scope scope))
+  (make-or-update name namespace environment make-cont #'identity
+                  :scope scope))
 
 ;;; Hierarchical environment protocol
 

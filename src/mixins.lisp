@@ -48,8 +48,12 @@
                                     if-exists)
   (declare (ignore if-does-not-exist if-exists))
   (if-let ((bindings (namespace-bindings namespace environment)))
-    (lookup-in-bindings name bindings namespace environment)
-    (values nil nil)))
+    (multiple-value-bind (value found?)
+        (lookup-in-bindings name bindings namespace environment)
+      (if found?
+          (values value t environment)
+          (values nil nil nil)))
+    (values nil nil nil)))
 
 (defmethod (setf lookup) ((new-value   t)
                           (name        t)
@@ -177,13 +181,13 @@
                                if-does-not-exist
                                if-exists)
   (declare (ignore if-does-not-exist if-exists))
-  (multiple-value-bind (value defined?)
+  (multiple-value-bind (value defined? container)
       (lookup-using-scope name namespace environment :direct
                           :if-does-not-exist nil)
     (cond ((eq defined? t)
-           (values value defined?))
+           (values value defined? container))
           ((eq value +unbound+)
-           (values nil nil))
+           (values nil nil nil))
           (t
            (when-let ((parent (parent environment)))
              (lookup-using-scope name namespace parent scope
