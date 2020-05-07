@@ -31,6 +31,9 @@
           (env:lookup 'funcall 'function env) #'funcall)
     env))
 
+(defclass dynamic-environment (env:lexical-environment)
+  ())
+
 ;;; Utilities
 
 (defun make-environment (parent)
@@ -40,8 +43,8 @@
   (map nil (rcurry #'evaluate environment) (butlast forms))
   (evaluate (lastcar forms) environment))
 
-(defun make-abstraction (lambda-list body environment)
-  (lambda (&rest args)
+(defun make-abstraction (lambda-list body static-environment)
+  (lambda (dynamic-environment &rest args)
     (let ((environment (make-environment environment)))
       (loop :for name  :in lambda-list
             :for value :in args
