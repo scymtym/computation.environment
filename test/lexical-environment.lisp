@@ -1,6 +1,6 @@
 ;;;; lexical-environment.lisp --- Tests for the lexical environment class.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -16,8 +16,9 @@
 
   (let* ((parent (make-empty-global-environment))
          (env    (make-instance 'lexical-environment :parent parent)))
-    (map-entries (lambda (name namespace)
+    (map-entries (lambda (name namespace environment)
                    (unless (eq name 'namespace)
-                     (is (=     0   (entry-count namespace env)))
-                     (is (equal '() (entries     namespace env)))))
+                     (is (=     0      (entry-count namespace env)))
+                     (is (equal '()    (entries     namespace env)))
+                     (is (eq    parent environment))))
                  'namespace env)))
