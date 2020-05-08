@@ -7,6 +7,9 @@
 (cl:in-package #:computation.environment)
 
 ;;; Bindings protocol
+;;;
+;;; This protocol allows accessing the bindings within a single
+;;; namespace in one particular environment.
 
 (defgeneric make-bindings (namespace environment))
 
@@ -21,6 +24,11 @@
 (defgeneric (setf lookup-in-bindings) (new-value name bindings namespace environment))
 
 ;;; Environment protocol
+;;;
+;;; This protocol allows accessing the bindings in all namespaces in a
+;;; given scope starting at a particular environment. The scope
+;;; controls, for example, whether bindings inherited from parent
+;;; environments should be considered.
 
 ;;; TODO accessors for namespaces (direct and indirect?)
 
@@ -34,7 +42,11 @@
 
 (defgeneric map-effective-entries (function namespace environment)
   (:documentation
-   "TODO"))
+   "Call FUNCTION for each entry in NAMESPACE in ENVIRONMENT.
+
+    The lambda list of FUNCTION must be compatible with
+
+      (name value container)"))
 
 (defgeneric effective-entries (namespace environment)
   (:documentation
@@ -65,7 +77,15 @@
 
 (defgeneric make-or-update (name namespace environment make-cont update-cont)
   (:documentation
-   "TODO"))
+   "TODO
+
+    UPDATE-CONT has to be a function with a lambda-list compatible to
+
+      (old-value)
+
+    and has to return two values when called: 1) an updated value
+    based on OLD-VALUE 2) a Boolean indicating whether the first
+    return value is different from OLD-VALUE."))
 
 (defgeneric ensure (name namespace environment make-cont)
   (:documentation
@@ -135,7 +155,9 @@
 
 (defgeneric parent (environment))
 
-; root
+(defgeneric root (environment)
+  (:documentation
+   "Return the ancestor of ENVIRONMENT that has no parent."))
 
 (defgeneric depth (environment))
 
@@ -153,6 +175,11 @@
 
 (defmethod parent ((environment t))
   nil)
+
+(defmethod root ((environment t))
+  (if-let ((parent (parent environment)))
+    (root parent)
+    environment))
 
 (defmethod depth ((environment t))
   (if-let ((parent (parent environment)))

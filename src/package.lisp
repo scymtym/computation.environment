@@ -39,6 +39,8 @@
   ;; Hierarchical environment protocol
   (:export
    #:parent
+   #:root
+   #:depth
 
    #:direct-entry-count
    #:map-direct-entries
