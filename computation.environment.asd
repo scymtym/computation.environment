@@ -17,8 +17,8 @@
   :components  ((:module "src"
                  :serial t
                  :components ((:file       "package")
-                              (:file       "protocol")
                               (:file       "conditions")
+                              (:file       "protocol")
 
                               (:file       "namespace-mixins")
                               (:file       "mixins") ; TODO environment-mixins
@@ -34,7 +34,7 @@
 (defsystem "computation.environment/examples"
   :depends-on  ("computation.environment")
 
-  :components  ((:module     "example"
+  :components  ((:module     "examples"
                  :serial     t
                  :components ((:file       "defclass")))))
 
