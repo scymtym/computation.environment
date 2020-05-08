@@ -11,13 +11,18 @@
 ;;; This protocol allows accessing the bindings within a single
 ;;; namespace in one particular environment.
 
-(defgeneric make-bindings (namespace environment))
+(defgeneric make-bindings (namespace environment)
+  (:documentation
+   "Return a bindings object for NAMESPACE in ENVIRONMENT.
 
-(defgeneric entry-count-in-bindings (bindings namespace environment))
+    The returned object must be usable with NAMESPACE and ENVIRONMENT
+    in the bindings protocol."))
+
+(defgeneric entry-count-in-bindings (bindings namespace environment)
+  (:documentation
+   "Return the number of entries in BINDINGS in NAMESPACE, ENVIRONMENT."))
 
 (defgeneric map-entries-in-bindings (function bindings namespace environment))
-
-(defgeneric entries-in-bindings (bindings namespace environment)) ; TODO remove
 
 (defgeneric lookup-in-bindings (name bindings namespace environment))
 

@@ -1,6 +1,6 @@
 ;;;; package.lisp --- Package definition for the computation.environment system
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -22,7 +22,8 @@
   ;; Bindings protocol
   (:export
    #:make-bindings
-   #:entries-in-bindings
+   #:entry-count-in-bindings
+   #:map-entries-in-bindings
    #:lookup-in-bindings)                ; also setf
 
   ;; Environment protocol
