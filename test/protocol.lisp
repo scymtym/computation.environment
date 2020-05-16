@@ -37,3 +37,36 @@
             ((foo function :if-does-not-exist nil) nil  nil nil)
             ;; Name is bound in namespace
             ((bar function)                        :bar t   ,environment)))))
+
+(test make-or-update.smoke
+  "Smoke test for the `make-or-update' function."
+
+  (mapc (lambda (arguments-and-expected)
+          (destructuring-bind
+              ((name namespace) new-value (updated-value updated?)
+               expected-new-value expected-new-value?
+               expected-old-value expected-old-container)
+              arguments-and-expected
+            (let* ((environment            (make-populated-global-environment))
+                   (expected-old-container (case expected-old-container
+                                             (:environment
+                                              environment)
+                                             (t
+                                              expected-old-container))))
+              (flet ((do-it ()
+                       (make-or-update name namespace environment
+                                       (lambda ()
+                                         new-value)
+                                       (lambda (old-value old-container)
+                                         (declare (ignore old-value old-container))
+                                         (values updated-value updated?)))))
+                (multiple-value-bind
+                      (new-value new-value? old-value old-container)
+                    (do-it)
+                  (is (eql expected-new-value     new-value))
+                  (is (eq  expected-new-value?    new-value?))
+                  (is (eql expected-old-value     old-value))
+                  (is (eq  expected-old-container old-container)))))))
+        `(((foo function) :new-foo (:updated-foo t)   :new-foo     t   nil  nil)
+          ((bar function) :new-bar (:updated-bar t)   :updated-bar t   :bar :environment)
+          ((bar function) :new-bar (nil          nil) :bar         nil :bar :environment))))

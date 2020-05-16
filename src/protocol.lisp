@@ -109,15 +109,39 @@
 (defgeneric make-or-update (name namespace environment make-cont update-cont
                             &key scope)
   (:documentation
-   "TODO
+   "Use MAKE-CONT or UPDATE-CONT to set NAME in NAMESPACE in ENVIRONMENT for SCOPE.
 
-    UPDATE-CONT has to be a function with a lambda-list compatible to
+    Return four values: 1) the new value of NAME in NAMESPACE in
+    ENVIRONMENT 2) a Boolean indicating whether the value of NAME in
+    NAMESPACE in ENVIRONMENT has been updated 3) the previous value of
+    NAME in NAMESPACE in ENVIRONMENT 4) the container in which the
+    previous value was found.
 
-      (old-value)
+    If no value exists for NAME in NAMESPACE in ENVIRONMENT, MAKE-CONT
+    is called to make a value which is then set as the value of NAME
+    in NAMESPACE in ENVIRONMENT.
 
-    and has to return two values when called: 1) an updated value
-    based on OLD-VALUE 2) a Boolean indicating whether the first
-    return value is different from OLD-VALUE."))
+    If a value exists for NAME in NAMESPACE in environment,
+    UPDATE-CONT is called with the existing value and its container to
+    potentially compute an updated value. If an updated value is
+    computed, that value is set as the value of NAME in NAMESPACE in
+    ENVIRONMENT.
+
+    MAKE-CONT has to be a function with a lambda list compatible to
+
+      ()
+
+    and has to return the new value as its primary return value.
+
+    UPDATE-CONT has to be a function with a lambda list compatible to
+
+      (old-value old-container)
+
+    and must return between two values and three values when called:
+    1) an updated value based on OLD-VALUE 2) a Boolean indicating
+    whether the first return value is different from OLD-VALUE 3)
+    optionally a container in which the returned updated value should
+    be set."))
 
 (defgeneric ensure (name namespace environment make-cont &key scope)
   (:documentation
@@ -154,7 +178,6 @@
                       (funcall if-does-not-exist condition)))
           (t        (values if-does-not-exist nil nil))))))
 
-;;; TODO could return three values: old, updated, new
 (defmethod make-or-update ((name        t)
                            (namespace   t)
                            (environment t)
@@ -176,8 +199,8 @@
       (if new-value?
           (let ((new-container (or new-container environment)))
             (setf (lookup name namespace new-container) new-value)
-            (values new-value t))
-          (values value nil)))))
+            (values new-value t value container))
+          (values value nil value container)))))
 
 (defmethod ensure ((name t) (namespace t) (environment t) (make-cont t)
                    &key (scope t))
