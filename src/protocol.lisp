@@ -246,7 +246,3 @@
   (if-let ((parent (parent environment)))
     (1+ (depth parent))
     0))
-
-;;; Entry update protocol
-
-#+maybe (defgeneric ensure-using-existing (name namespace environment existing &rest args))
