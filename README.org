@@ -183,7 +183,7 @@
    :   EQ-NAMESPACE COMMON-LISP:FUNCTION 1 entry
    :     FOO → :FOO
 
-** TODO Shadowing
+** STARTED Shadowing
 
    #+BEGIN_SRC lisp :exports both :results output
      (let ((augmented (computation.environment:augmented-namespace
@@ -191,7 +191,7 @@
                        :class 'computation.environment::lexical-environment)))
        (describe *environment*)
        (terpri) (terpri)
-       (describe augmented) (clouseau:inspect augmented :new-process t))
+       (describe augmented))
    #+END_SRC
 
    #+RESULTS:
