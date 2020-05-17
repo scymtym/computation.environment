@@ -145,7 +145,22 @@
 
 (defgeneric ensure (name namespace environment make-cont &key scope)
   (:documentation
-   "TODO"))
+   "Maybe use MAKE-CONT to set NAME in NAMESPACE in ENVIRONMENT for SCOPE.
+
+    Return four values: 1) the new value of NAME in NAMESPACE in
+    ENVIRONMENT 2) a Boolean indicating whether the value of NAME in
+    NAMESPACE in ENVIRONMENT has been updated 3) the container in
+    which the previous value was found.
+
+    If no value exists for NAME in NAMESPACE in ENVIRONMENT, MAKE-CONT
+    is called to make a value which is then set as the value of NAME
+    in NAMESPACE in ENVIRONMENT.
+
+    MAKE-CONT has to be a function with a lambda list compatible to
+
+      ()
+
+    and has to return the new value as its primary return value."))
 
 ;;; Default behavior
 
@@ -204,8 +219,15 @@
 
 (defmethod ensure ((name t) (namespace t) (environment t) (make-cont t)
                    &key (scope t))
-  (make-or-update name namespace environment make-cont #'identity
-                  :scope scope))
+  (flet ((keep-it (value container)
+           (declare (ignore container))
+           (values value nil)))
+    (declare (dynamic-extent #'keep-it))
+    (multiple-value-bind (new-value updated? old-value old-container)
+        (make-or-update name namespace environment make-cont #'keep-it
+                        :scope scope)
+      (declare (ignore old-value))
+      (values new-value updated? old-container))))
 
 ;;; Hierarchical environment protocol
 

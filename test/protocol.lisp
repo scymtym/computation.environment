@@ -70,3 +70,29 @@
         `(((foo function) :new-foo (:updated-foo t)   :new-foo     t   nil  nil)
           ((bar function) :new-bar (:updated-bar t)   :updated-bar t   :bar :environment)
           ((bar function) :new-bar (nil          nil) :bar         nil :bar :environment))))
+
+(test ensure.smoke
+  "Smoke test for the `ensure' function."
+
+  (mapc (lambda (arguments-and-expected)
+          (destructuring-bind
+              ((name namespace) new-value
+               expected-new-value expected-new-value? expected-old-container)
+              arguments-and-expected
+            (let* ((environment            (make-populated-global-environment))
+                   (expected-old-container (case expected-old-container
+                                             (:environment
+                                              environment)
+                                             (t
+                                              expected-old-container))))
+              (flet ((do-it ()
+                       (ensure name namespace environment
+                               (constantly new-value))))
+                (multiple-value-bind (new-value new-value? old-container)
+                    (do-it)
+                  (is (eql expected-new-value     new-value))
+                  (is (eq  expected-new-value?    new-value?))
+                  (is (eq  expected-old-container old-container)))))))
+        `(((foo function) :new-foo :new-foo t   nil)
+          ((bar function) :new-bar :bar     nil :environment)
+          ((bar function) :new-bar :bar     nil :environment))))
