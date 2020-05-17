@@ -224,13 +224,22 @@
 
 ;;; Hierarchical environment protocol
 
-(defgeneric parent (environment))
+(defgeneric parent (environment)
+  (:documentation
+   "Return the parent of ENVIRONMENT or `nil'."))
 
 (defgeneric root (environment)
   (:documentation
-   "Return the ancestor of ENVIRONMENT that has no parent."))
+   "Return the ancestor of ENVIRONMENT that has no parent.
 
-(defgeneric depth (environment))
+    In particular, if ENVIRONMENT does not have a parent, return
+    ENVIRONMENT."))
+
+(defgeneric depth (environment)
+  (:documentation
+   "Return the number of ancestors ENVIRONMENT has.
+
+    In particular, return 0 if ENVIRONMENT does not have a parent."))
 
 ;;; Default behavior
 
