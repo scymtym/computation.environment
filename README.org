@@ -225,6 +225,11 @@
 
 ** STARTED The bindings protocol
 
+   This low-level protocol is responsible for creating and accessing
+   [[glossary:binding][bindings]] in a given [[glossary:namespace][namespace]]. Clients should usually use the
+   higher-level [[#sec:dictionary-environment-protocol][environment protocol]].
+
+   <<generic-function:make-bindings>>
    #+BEGIN_SRC lisp :results value :exports results :session "doc"
      (doc 'computation.environment:make-bindings 'function)
    #+END_SRC
@@ -237,6 +242,7 @@
    : The returned object must be usable with NAMESPACE and ENVIRONMENT
    : in the bindings protocol.
 
+   <<generic-function:entry-count-in-bindings>>
    #+BEGIN_SRC lisp :results value :exports results :session "doc"
      (doc 'computation.environment:entry-count-in-bindings 'function)
    #+END_SRC
@@ -246,6 +252,35 @@
    :
    : Return the number of entries in BINDINGS in NAMESPACE, ENVIRONMENT.
 
-** TODO The environment protocol
+   <<generic-function:map-entries-in-bindings>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:map-entries-in-bindings 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : map-entries-in-bindings FUNCTION BINDINGS NAMESPACE ENVIRONMENT
+   :
+   : NIL
+
+   <<generic-function:lookup-in-bindings>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:lookup-in-bindings 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : lookup-in-bindings NAME BINDINGS NAMESPACE ENVIRONMENT
+   :
+   : NIL
+
+   <<generic-function:setf-lookup-in-bindings>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc '(setf computation.environment:lookup-in-bindings) 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : (setf lookup-in-bindings) NEW-VALUE NAME BINDINGS NAMESPACE ENVIRONMENT
+   :
+   : NIL
+
 
 ** TODO The hierarchical environment protocol
