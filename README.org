@@ -4,7 +4,8 @@
 * STARTED Introduction
 
   The ~compoutation.environment~ library provides protocols and
-  implementations for environments, that is data structures which
+  implementations for environments (not necessarily Common Lisp
+  environments or Lisp environments), that is data structures which
   manage bindings of names to values. Different kinds of environments
   are available:
 
@@ -20,35 +21,61 @@
 
 * STARTED Concepts
 
-  + Name :: Different kinds of names, different equalities
+  This section introduces the terminology used in the remainder of
+  this document.
 
-  + Namespace :: A namespace defines a particular kind of /name/ for
-                 which it controls
+  + <<glossary:name>> Name :: In this context, a name is an object the
+       purpose of which is referring to another object. Their are
+       different kinds of names with different associated rules
+       regarding which objects are legal name of that kind and the
+       comparison of names. All names of one particular kind form a
+       [[glossary:namespace][namespace]].
 
-    + Name syntax :: Which objects are valid names in the namespace?
+  + <<glossary:namespace>> Namespace :: A namespace defines a
+       particular kind of [[glossary:name][name]] for which it controls
 
-    + Name comparison :: Given two objects which are valid names, how
-         to decide whether they designate the same name?
+    + <<glossary:name-syntax>> Name syntax :: Which objects are valid
+         names in the namespace?
+
+         For example, legal variable names are typically symbols
+         (excluding constants such as ~cl:nil~, ~cl:t~ and
+         ~cl:pi~). Function names, on the other hand, can also be of
+         the form ~(cl:setf NAME)~.
+
+    + <<glossary:name-comparison>> Name comparison :: Given two
+         objects which are valid names, how to decide whether they
+         designate the same name?
 
          For example, ~name1~ and ~name2~ must be ~eq~ in order to
-         designate the same /variable name/. However, ~name1~ and
+         designate the same [[glossary:name][variable name]]. However, ~name1~ and
          ~name2~ in ~(let ((name1 (list 'setf foo)) (name2 (list 'setf
          foo))))~ are not ~eq~ yet still designate the same /function
          name/.
 
     + Entry isolation :: Not sure
 
-  + Environment ::
+    For example, legal variable names are typically symbols (excluding
+    constants such as ~cl:nil~, ~cl:t~ and ~cl:pi~) and can be
+    compared using ~cl:eq~. Function names, on the other hand, can
+    also be of the form ~(cl:setf NAME)~ and must be compared using
+    ~cl:equal~ or a specialized function. In a non-Lisp use-case,
+    names could be non-empty strings and ~string=~ or
+    ~string-equal~ could be appropriate comparison functions.
 
-  + Binding :: An association of a /name/ in a /namespace/ and a
-               value.
+  + <<glossary:environment>> Environment :: At the minimum, a
+       collection of [[glossary:namespace][namespaces]] and associated [[glossary:binding][binding]] collections. An
+       environment may have other parts such as a reference to a
+       parent environment.
 
-  + scope :: A scopes controls the way in which a value is looked up
-             for a given name, /namespace/ and /environment/.
+  + <<glossary:binding>> Binding :: An association of a [[glossary:name][name]] in a
+       [[glossary:namespace][namespace]] and a value.
 
-             As a concrete example, the /direct/ scope constrains the
-             lookup to the specified environment, that is ancestors of
-             the environment are not considered.
+  + <<glossary:scope>> Scope :: A scopes controls the way in which a
+       value is looked up for a given name, [[glossary:namespace][namespace]] and [[glossary:environment][environment]].
+
+       As a concrete example, the /direct/ scope constrains the lookup
+       to the specified environment, that is ancestors of the
+       environment are not considered.
 
 * STARTED Tutorial
 
