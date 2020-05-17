@@ -283,7 +283,6 @@
    : NIL
 
 
-** TODO The hierarchical environment protocol
 ** STARTED The environment protocol
    :PROPERTIES:
    :CUSTOM_ID: sec:dictionary-environment-protocol
@@ -427,3 +426,39 @@
    and has to return the new value as its primary return value.
    #+end_example
 
+** STARTED The hierarchical environment protocol
+
+   <<generic-function:parent>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:parent 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : parent ENVIRONMENT
+   :
+   : Return the parent of ENVIRONMENT or `nil'.
+
+   <<generic-function:root>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:root 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : root ENVIRONMENT
+   :
+   : Return the ancestor of ENVIRONMENT that has no parent.
+   :
+   : In particular, if ENVIRONMENT does not have a parent, return
+   : ENVIRONMENT.
+
+   <<generic-function:depth>>
+   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+     (doc 'computation.environment:depth 'function)
+   #+END_SRC
+
+   #+RESULTS:
+   : depth ENVIRONMENT
+   :
+   : Return the number of ancestors ENVIRONMENT has.
+   :
+   : In particular, return 0 if ENVIRONMENT does not have a parent.
