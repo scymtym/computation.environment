@@ -44,9 +44,8 @@
                                (namespace   t)
                                (environment bindings-mixin)
                                (scope       t)
-                               &key if-does-not-exist
-                                    if-exists)
-  (declare (ignore if-does-not-exist if-exists))
+                               &key if-does-not-exist)
+  (declare (ignore if-does-not-exist))
   (if-let ((bindings (namespace-bindings namespace environment)))
     (multiple-value-bind (value found?)
         (lookup-in-bindings name bindings namespace environment)
@@ -59,8 +58,8 @@
                           (name        t)
                           (namespace   t)
                           (environment bindings-mixin)
-                          &key if-does-not-exist if-exists)
-  (declare (ignore if-does-not-exist if-exists))
+                          &key if-does-not-exist)
+  (declare (ignore if-does-not-exist))
   (let ((bindings (ensure-namespace-bindings namespace environment)))
     (setf (lookup-in-bindings name bindings namespace environment) new-value)))
 
@@ -102,25 +101,19 @@
                                  (namespace   symbol)
                                  (environment meta-namespace-lookup-mixin)
                                  (scope       t)
-                                 &key
-                                 if-does-not-exist
-                                 if-exists)
+                                 &key if-does-not-exist)
     (let ((namespace (ensure-namespace environment namespace)))
       (lookup-using-scope name namespace environment scope
-                          :if-does-not-exist if-does-not-exist
-                          :if-exists         if-exists)))
+                          :if-does-not-exist if-does-not-exist)))
 
   (defmethod (setf lookup) ((new-value   t)
                             (name        t)
                             (namespace   symbol)
                             (environment meta-namespace-lookup-mixin)
-                            &key
-                            if-does-not-exist
-                            if-exists)
+                            &key if-does-not-exist)
     (let ((namespace (ensure-namespace environment namespace)))
       (setf (lookup name namespace environment
-                    :if-does-not-exist if-does-not-exist
-                    :if-exists         if-exists)
+                    :if-does-not-exist if-does-not-exist)
             new-value))))
 
 ;;; `hierarchical-environment-mixin'
@@ -177,10 +170,8 @@
                                (namespace   t)
                                (environment hierarchical-environment-mixin)
                                (scope       (eql t))
-                               &key
-                               if-does-not-exist
-                               if-exists)
-  (declare (ignore if-does-not-exist if-exists))
+                               &key if-does-not-exist)
+  (declare (ignore if-does-not-exist))
   (multiple-value-bind (value defined? container)
       (lookup-using-scope name namespace environment :direct
                           :if-does-not-exist nil)

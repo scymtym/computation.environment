@@ -81,8 +81,7 @@
    "Return entries in NAMESPACE in ENVIRONMENT for SCOPE as an alist."))
 
 (define-scoped-protocol-function lookup (name namespace environment
-                                         &key (if-does-not-exist #'error)
-                                              if-exists)
+                                         &key (if-does-not-exist #'error))
   (:documentation
    "Lookup and return the value for NAME in NAMESPACE in ENVIRONMENT for SCOPE.
 
@@ -95,14 +94,10 @@
     contained in ENVIRONMENT or any of its ancestor environments.
 
     IF-DOES-NOT-EXIST controls the behavior in case such a value does
-    not exist.
-
-    IF-EXISTS is accepted and ignored for parity with `(setf
-    lookup)'."))
+    not exist."))
 
 (defgeneric (setf lookup) (new-value name namespace environment ; TODO separate mutable environment protocol?
-                           &key if-does-not-exist
-                                if-exists)
+                           &key if-does-not-exist)
   (:documentation
    "Set the value of NAME in NAMESPACE in ENVIRONMENT to NEW-VALUE."))
 
@@ -178,9 +173,7 @@
                                        (container t)
                                        (scope     t)
                                        &key
-                                       (if-does-not-exist #'error)
-                                       if-exists)
-  (declare (ignore if-exists))
+                                       (if-does-not-exist #'error))
   (multiple-value-bind (value value? direct-container) (call-next-method)
     (if value?
         (values value value? direct-container)
