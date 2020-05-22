@@ -21,7 +21,7 @@
                               (:file       "protocol")
 
                               (:file       "namespace-mixins")
-                              (:file       "mixins") ; TODO environment-mixins
+                              (:file       "environment-mixins")
 
                               (:file       "global-environment")
                               (:file       "lexical-environment")
