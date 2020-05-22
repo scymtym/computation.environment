@@ -36,11 +36,16 @@
 
   :components  ((:module     "examples"
                  :serial     t
-                 :components ((:file       "defclass")))))
+                 :components ((:file       "defclass")
+                              ; (:file       "interpreter")
+                              ))))
 
 (defsystem "computation.environment/test"
+  :description "Tests for the computation.environment system."
+  :license     "GPLv3"
+
   :depends-on  ("computation.environment"
-                ; "computation.environment/examples"
+                "computation.environment/examples"
 
                 "fiveam")
 
