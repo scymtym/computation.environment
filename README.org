@@ -214,13 +214,22 @@
     #.(progn
         #1=(ql:quickload '(:computation.environment :alexandria :split-sequence))
         '#1#)
-    (defun doc (symbol kind)
+    ,#+no (defun doc (symbol kind)
       (let* ((lambda-list (sb-introspect:function-lambda-list symbol))
              (string      (documentation symbol kind))
              (lines       (split-sequence:split-sequence #\Newline string))
              (trimmed     (mapcar (alexandria:curry #'string-left-trim '(#\Space)) lines)))
-        (format nil "~(~A~) ~<~{~A~^ ~}~:@>~2%~{~A~^~%~}"
+        (format t "~~~(~A~)~~ src_lisp[:exports code]{~<~{~A~^ ~}~:@>}~2%~{~A~^~%~}"
                 symbol (list lambda-list) trimmed)))
+    (in-package #:cl-user)
+
+    (defun doc (symbol kind)
+      (let* ((lambda-list (sb-introspect:function-lambda-list symbol))
+             (string      (documentation symbol kind))
+             (trimmed     (text.documentation-string.parser::remove-common-leading-whitespace string)))
+        (format t "~(~A~) ~<~{~A~^ ~}~:@>~2%"
+                symbol (list lambda-list))
+        (text.documentation-string.parser::render-org 'list (text.documentation-string.parser::parse trimmed) *standard-output*)))
   #+END_SRC
 
 ** STARTED The bindings protocol
@@ -400,43 +409,22 @@
    #+end_example
 
    <<generic-function:ensure>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
+     (in-package #:cl-user)
      (doc 'computation.environment:ensure 'function)
    #+END_SRC
 
    #+RESULTS:
-   #+begin_example
-   ensure NAME NAMESPACE ENVIRONMENT MAKE-CONT &KEY SCOPE
-
-   Maybe use MAKE-CONT to set NAME in NAMESPACE in ENVIRONMENT for SCOPE.
-
-   Return four values: 1) the new value of NAME in NAMESPACE in
-   ENVIRONMENT 2) a Boolean indicating whether the value of NAME in
-   NAMESPACE in ENVIRONMENT has been updated 3) the container in
-   which the previous value was found.
-
-   If no value exists for NAME in NAMESPACE in ENVIRONMENT, MAKE-CONT
-   is called to make a value which is then set as the value of NAME
-   in NAMESPACE in ENVIRONMENT.
-
-   MAKE-CONT has to be a function with a lambda list compatible to
-
-   ()
-
-   and has to return the new value as its primary return value.
-   #+end_example
 
 ** STARTED The hierarchical environment protocol
 
    <<generic-function:parent>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
+     (in-package #:cl-user)
      (doc 'computation.environment:parent 'function)
    #+END_SRC
 
    #+RESULTS:
-   : parent ENVIRONMENT
-   :
-   : Return the parent of ENVIRONMENT or `nil'.
 
    <<generic-function:root>>
    #+BEGIN_SRC lisp :results value :exports results :session "doc"
