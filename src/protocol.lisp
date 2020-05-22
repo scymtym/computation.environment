@@ -96,10 +96,14 @@
     IF-DOES-NOT-EXIST controls the behavior in case such a value does
     not exist."))
 
-(defgeneric (setf lookup) (new-value name namespace environment ; TODO separate mutable environment protocol?
+(defgeneric (setf lookup) (new-value name namespace environment
                            &key if-does-not-exist)
   (:documentation
-   "Set the value of NAME in NAMESPACE in ENVIRONMENT to NEW-VALUE."))
+   "Set the value of NAME in NAMESPACE in ENVIRONMENT to NEW-VALUE.
+
+    Return NEW-VALUE as the primary return value.
+
+    IF-DOES-NOT-EXIST is accepted for parity with `lookup'."))
 
 (defgeneric make-or-update (name namespace environment make-cont update-cont
                             &key scope)

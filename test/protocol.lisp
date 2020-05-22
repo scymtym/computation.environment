@@ -38,6 +38,36 @@
             ;; Name is bound in namespace
             ((bar function)                        :bar t   ,environment)))))
 
+(test setf-lookup.smoke
+  "Smoke test for the `(setf lookup)' function."
+
+  (mapc (lambda (arguments-and-expected)
+          (destructuring-bind
+              ((new-value name namespace) expected-value)
+              arguments-and-expected
+            (let ((environment (make-populated-global-environment)))
+              (flet ((do-it ()
+                       (setf (lookup name namespace environment)
+                             new-value)))
+                (case expected-value
+                  (entry-does-not-exist-error
+                   (signals entry-does-not-exist-error (do-it)))
+                  (t
+                   (let ((result (do-it)))
+                     (is (eql expected-value result)))
+                   (multiple-value-bind (value value? container)
+                       (lookup name namespace environment
+                               :if-does-not-exist nil)
+                     (is (eql expected-value value))
+                     (is-true value?)
+                     (is (eq environment     container)))))))))
+        `(;; Namespace does not exist
+          ((1 foo foo)      entry-does-not-exist-error)
+          ;; Name is not bound in namespace.
+          ((1 foo function) 1)
+          ;; Name is already bound in namespace.
+          ((1 bar function) 1))))
+
 (test make-or-update.smoke
   "Smoke test for the `make-or-update' function."
 
