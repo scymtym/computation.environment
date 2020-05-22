@@ -193,22 +193,3 @@
 
 #+later (defmethod make-bindings ((namespace   )
                           (environment )))
-
-;;; `ensure-using-existing-mixin'
-
-#+maybe (defclass ensure-using-existing-mixin ()
-  ())
-
-#+maybe (defmethod ensure ((name        t)
-                   (namespace   t)
-                   (environment ensure-using-existing-mixin)
-                   &key
-                   (if-does-not-exist (lambda ()
-                                        (ensure-using-existing
-                                         name namespace environment nil)))
-                   (if-exists         (lambda (value)
-                                        (ensure-using-existing
-                                         name namespace environment value))))
-  (call-next-method name namespace environment
-                    :if-does-not-exist if-does-not-exist
-                    :if-exists         if-exists))
