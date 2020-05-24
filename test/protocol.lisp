@@ -9,6 +9,19 @@
 (def-suite* :computation.environment.protocol
   :in :computation.environment)
 
+(test entry-count.smoke
+  "Smoke test for the `entry-count' function."
+
+  (let ((environment (make-empty-global-environment)))
+    (is (eql 3 (entry-count 'namespace environment)))
+    (is (eql 0 (entry-count 'variable  environment)))
+    (is (eql 0 (entry-count 'function  environment))))
+
+  (let ((environment (make-populated-global-environment)))
+    (is (eql 3 (entry-count 'namespace environment)))
+    (is (eql 0 (entry-count 'variable  environment)))
+    (is (eql 1 (entry-count 'function  environment)))))
+
 (test lookup.smoke
   "Smoke test for the `lookup' function."
 
