@@ -18,6 +18,7 @@
 
 (defvar *function-namespace* (make-instance 'function-namespace))
 
+;; TODO put this protocol into the actual library
 (defmethod valid-name? ((name t) (namespace function-namespace))
   nil)
 
@@ -61,22 +62,32 @@
 (defclass dynamic-environment (env:lexical-environment)
   ())
 
+(declaim (inline make-dynamic-environment))
+(defun make-dynamic-environment (parent)
+  (make-instance 'dynamic-environment :parent parent))
+
 ;;; Utilities
 
+(declaim (inline variable-environment))
+(defun variable-environment (name dynamic-environment lexical-environment)
+  (cond ((not (env:lookup name 'variable-information lexical-environment
+                          :if-does-not-exist nil))
+         lexical-environment)
+        ((functionp dynamic-environment)
+         (funcall dynamic-environment))
+        (t
+         dynamic-environment)))
+
 (defun variable-value (name dynamic-environment lexical-environment)
-  (if (env:lookup name 'variable-information lexical-environment
-                  :if-does-not-exist nil)
-      (env:lookup name 'variable dynamic-environment)
-      (env:lookup name 'variable lexical-environment)))
+  (declare (type (not function) dynamic-environment))
+  (let ((environment (variable-environment
+                      name dynamic-environment lexical-environment)))
+    (env:lookup name 'variable environment)))
 
 (defun (setf variable-value) (new-value name dynamic-environment lexical-environment)
-  (if (env:lookup name 'variable-information lexical-environment
-                  :if-does-not-exist nil)
-      (let ((dynamic-environment (if (functionp dynamic-environment)
-                                     (funcall dynamic-environment)
-                                     dynamic-environment)))
-        (setf (env:lookup name 'variable dynamic-environment) new-value))
-      (setf (env:lookup name 'variable lexical-environment) new-value)))
+  (let ((environment (variable-environment
+                      name dynamic-environment lexical-environment)))
+    (setf (env:lookup name 'variable environment) new-value)))
 
 (defun make-environment (parent)
   (make-instance 'env:lexical-environment :parent parent))
@@ -88,11 +99,12 @@
 
 (defun make-abstraction (lambda-list body static-environment)
   (lambda (dynamic-environment &rest args)
-    (let ((environment (make-environment static-environment))
+    (let ((environment             (make-environment static-environment))
           (new-dynamic-environment dynamic-environment))
       (flet ((make-new-dynamic-environment ()
                (if (eq new-dynamic-environment dynamic-environment)
-                   (setf new-dynamic-environment (make-instance 'dynamic-environment :parent dynamic-environment))
+                   (setf new-dynamic-environment
+                         (make-dynamic-environment dynamic-environment))
                    new-dynamic-environment)))
         (loop :for name  :in lambda-list
               :for value :in args
@@ -148,12 +160,14 @@
                                 (dynamic-environment dynamic-environment)
                                 (lexical-environment env:lexical-environment))
   (destructuring-bind (name new-value-form) (rest form)
-    (let ((new-value (evaluate new-value-form dynamic-environment lexical-environment)))
-      ;; TODO maybe use `make-or-update'?
-      (multiple-value-bind (value found? container)
-          (variable-value name dynamic-environment lexical-environment)
-        (declare (ignore value found?))
-        (setf (env:lookup name 'variable container) new-value)))))
+    (let* ((new-value   (evaluate new-value-form dynamic-environment lexical-environment))
+           (environment (variable-environment name dynamic-environment lexical-environment)))
+      (env:make-or-update name 'variable environment
+                          (lambda ()
+                            new-value)
+                          (lambda (old-value container)
+                            (declare (ignore old-value))
+                            (values new-value t container))))))
 
 (defmethod evaluate-using-head ((head                (eql 'labels))
                                 (form                t)
@@ -228,36 +242,40 @@
     (evaluate form
               dyn-env lex-env)))
 
-(eval `(labels ((get-foo ()
-                  *foo*))
-         (let ((d 1000)
-               (*foo* 10))
-           (labels ((foo (a b c)
-                      (setq d (+ d d))
-                      (list a (+ b c d)))
-                    (bar (e)
-                      (lambda (f) (+ d e f)
-                        )))
-             (list (get-foo)
-                   (foo (+ (let ((a 1)) (progn (+ a 2)))
-                           (let ((a 5)) a))
-                        10 11)
-                   (funcall (bar 7) 9)
-                   (catch 'foo (funcall (lambda () (+ 42 (throw 'foo 42))))))))))
+(assert (equal
+         '(10 (8 2021) 2016 42)
+         (eval `(labels ((get-foo ()
+                           *foo*))
+                  (let ((d 1000)
+                        (*foo* 10))
+                    (labels ((foo (a b c)
+                               (setq d (+ d d))
+                               (list a (+ b c d)))
+                             (bar (e)
+                               (lambda (f)
+                                 (+ d e f))))
+                      (list (get-foo)
+                            (foo (+ (let ((a 1)) (progn (+ a 2)))
+                                    (let ((a 5)) a))
+                                 10 11)
+                            (funcall (bar 7) 9)
+                            (catch 'foo (funcall (lambda () (+ 42 (throw 'foo 42))))))))))))
 
 
-(eval `(labels ((get-foo (*foo*)
-                  (setq *foo* 3)
-                  (bar))
-                (bar ()
-                  (list ':foo *foo*)))
-         (let ((*foo* 1))
-           (list *foo* (get-foo 2) *foo*))))
+(assert (equal
+         '(1 (:foo 3) 1)
+         (eval `(labels ((get-foo (*foo*)
+                           (setq *foo* 3)
+                           (bar))
+                         (bar ()
+                           (list ':foo *foo*)))
+                  (let ((*foo* 1))
+                    (list *foo* (get-foo 2) *foo*))))))
 
-(eval `(labels ((get-foo ()
-                  *foo*)
-                ((setf get-foo) (new-value)
-                  (setq *foo* new-value)))
-         (let ((*foo* 1))
-           (funcall #'(setf get-foo) 2)
-           *foo*)))
+(assert (eql 2 (eval `(labels ((get-foo ()
+                                 *foo*)
+                               ((setf get-foo) (new-value)
+                                 (setq *foo* new-value)))
+                        (let ((*foo* 1))
+                          (funcall #'(setf get-foo) 2)
+                          *foo*)))))
