@@ -1,6 +1,6 @@
 ;;;; namespace-mixins.lisp --- Namespace mixin classes.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -21,11 +21,6 @@
                                     (namespace   hash-table-bindings-mixin)
                                     (environment t))
   (maphash function bindings))
-
-(defmethod entries-in-bindings ((bindings    hash-table) ; TODO remove this?
-                                (namespace   hash-table-bindings-mixin)
-                                (environment t))
-  (hash-table-alist bindings))
 
 (defmethod lookup-in-bindings ((name        t)
                                (bindings    hash-table)
