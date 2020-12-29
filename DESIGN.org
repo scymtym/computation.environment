@@ -111,12 +111,18 @@
 
 * Design Considerations
 
-** TODO Removing Entries
+** STARTED Removing Entries
 
    1. What should the interface be?
 
+      A partial solution could be an ~nil-invalid-value-mixin~ which
+      makes ~(setf (lookup NAME NAMESPACE ENVIRONMENT) nil)~ act as
+      ~remove-binding~ or whatever the operation will be called.
+
    2. For hierarchical environments, children should be able
       "suppress" entries that exist in parents
+
+      That already works by storing an unbound marker in the child
 
 ** STARTED How to represent {{{term(scope)}}} in protocols?
 
