@@ -38,7 +38,7 @@
 
 ** STARTED Putting a new entry into an environment
 
-   destructive?
+   Destructive? Control behavior in case the name is already bound?
 
    + [X] Implement
    + [ ] Test
@@ -66,7 +66,7 @@
    + [ ] Test
    + [ ] Document
 
-** TODO Map over all entries
+** STARTED Map over all entries
 
    As a client, I can map my function over all entries of an
    {{{term(environment)}}}.
@@ -111,6 +111,10 @@
    traverses ancestors until an entry is found or the root is reached
    can be performed.
 
+   + [X] Implement
+   + [ ] Test
+   + [ ] Document
+
 ** TODO Unbound entries and shadowing (See [[*Removing Entries]])
 
    As a client, I can make a key appear unbound in a given environment
@@ -132,7 +136,13 @@
 
 ** TODO Atomic/transactional updates?
 
-* Design Considerations [0/2]
+* Design Considerations [1/3]
+
+** TODO Value constraints
+
+   Most namespaces will have constraints on valid values. For example
+   ~nil~ is not a valid function. How to described these constraints?
+   Can maybe be exploited for [[*Removing Entries]].
 
 ** STARTED Removing Entries
 
@@ -147,7 +157,9 @@
 
       That already works by storing an unbound marker in the child
 
-** STARTED How to represent {{{term(scope)}}} in protocols?
+** DONE How to represent {{{term(scope)}}} in protocols?
+
+   *Resolution: Basically decided to go with the second design.*
 
    The first alternative would be a-priori determining all possible
    scopes and defining families of generic functions:
