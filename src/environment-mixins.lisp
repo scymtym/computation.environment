@@ -82,7 +82,11 @@
 (macrolet ((ensure-namespace (environment namespace)
              `(ensure-gethash
                ,namespace (%namespaces ,environment)
-               (lookup ,namespace 'namespace ,environment))))
+               (or (lookup ,namespace 'namespace ,environment
+                           :if-does-not-exist nil)
+                   (error 'namespace-does-not-exist-error
+                          :name        ,namespace
+                          :environment ,environment)))))
 
   (defmethod entry-count-using-scope ((namespace   symbol)
                                       (environment meta-namespace-lookup-mixin)

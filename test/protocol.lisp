@@ -37,14 +37,16 @@
                 (case expected-value
                   (entry-does-not-exist-error
                    (signals entry-does-not-exist-error (do-it)))
+                  (namespace-does-not-exist-error
+                   (signals namespace-does-not-exist-error (do-it)))
                   (t
                    (multiple-value-bind (value value? container) (do-it)
                      (is (eql expected-value     value))
                      (is (eq  expected-value?    value?))
                      (is (eq  expected-container container))))))))
           `(;; Namespace does not exist
-            ((foo foo)                             entry-does-not-exist-error)
-            ((foo foo :if-does-not-exist nil)      entry-does-not-exist-error)
+            ((foo foo)                             namespace-does-not-exist-error)
+            ((foo foo :if-does-not-exist nil)      namespace-does-not-exist-error)
             ;; Name is not bound in namespace
             ((foo function)                        entry-does-not-exist-error)
             ((foo function :if-does-not-exist nil) nil  nil nil)
@@ -65,6 +67,8 @@
                 (case expected-value
                   (entry-does-not-exist-error
                    (signals entry-does-not-exist-error (do-it)))
+                  (namespace-does-not-exist-error
+                   (signals namespace-does-not-exist-error (do-it)))
                   (t
                    (let ((result (do-it)))
                      (is (eql expected-value result)))
@@ -75,7 +79,7 @@
                      (is-true value?)
                      (is (eq environment     container)))))))))
         `(;; Namespace does not exist
-          ((1 foo foo)      entry-does-not-exist-error)
+          ((1 foo foo)      namespace-does-not-exist-error)
           ;; Name is not bound in namespace.
           ((1 foo function) 1)
           ;; Name is already bound in namespace.

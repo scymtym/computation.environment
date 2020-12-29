@@ -1,6 +1,6 @@
 ;;;; conditions.lisp --- Conditions signaled by the computation.environment system.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -25,9 +25,16 @@
                :reader  name)
    (%namespace :initarg :namespace
                :reader  namespace))
-  (:report (lambda (condition stream)
-             (format stream "~@<An entry for name ~S does not exist in ~
-                             namespace ~A in environment ~A~@:>"
-                     (name        condition)
-                     (namespace   condition)
-                     (environment condition)))))
+  (:report
+   (lambda (condition stream)
+     (let* ((environment    (environment condition))
+            (namespace      (namespace   condition))
+            (namespace-name (block nil
+                              (map-entries (lambda (name value container)
+                                             (declare (ignore container))
+                                             (when (eq value namespace)
+                                               (return name)))
+                                           'namespace environment))))
+       (format stream "~@<An entry for name ~S does not exist in ~
+                      namespace ~A (~A) in environment ~A~@:>"
+               (name condition) namespace-name namespace environment)))))
