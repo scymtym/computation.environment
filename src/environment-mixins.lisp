@@ -122,6 +122,8 @@
 
 ;;; `hierarchical-environment-mixin'
 
+(defconstant +unbound+ '%unbound%)
+
 (defclass hierarchical-environment-mixin ()
   ((%parent :initarg  :parent
             :reader   parent
@@ -135,16 +137,32 @@
 
 (defmethod entry-count-using-scope ((namespace   t)
                                     (environment hierarchical-environment-mixin)
-                                    (scope       (eql t)))
-  (+ (entry-count-using-scope namespace environment :direct)
-     (if-let ((parent (parent environment)))
-       (entry-count-using-scope namespace parent scope)
-       0)))
+                                    (scope       t))
+
+  (if-let ((parent (parent environment)))
+    (let ((result 0))
+      (flet ((count-entry (name value environment)
+               (declare (ignore name value environment))
+               (incf result)))
+        (declare (dynamic-extent #'count-entry))
+        (map-entries-using-scope #'count-entry namespace environment scope)
+        result))
+    (call-next-method namespace environment scope)))
+
+(defmethod map-entries-using-scope ((function    function)
+                                    (namespace   t)
+                                    (environment hierarchical-environment-mixin)
+                                    (scope       (eql :direct)))
+  (call-next-method (lambda (name value environment)
+                      (unless (eq value '%unbound%)
+                        (funcall function name value environment)))
+                    namespace environment scope))
 
 (defmethod map-entries-using-scope ((function    function)
                                     (namespace   t)
                                     (environment hierarchical-environment-mixin)
                                     (scope       (eql :all)))
+  ;; Consider all entries that are not `+unbound+'. Ignore shadowing.
   (map-entries-using-scope function namespace environment :direct)
   (when-let ((parent (parent environment)))
     (map-entries-using-scope function namespace parent scope)))
@@ -157,14 +175,20 @@
     ;; If ENVIRONMENT has a PARENT, consider the entries in PARENT
     ;; (and all ancestors) but only call FUNCTION when encountering a
     ;; name for the first time, that is environments shadow entries of
-    ;; the same name in their ancestor environments.
+    ;; the same name in their ancestor environments. Do not call
+    ;; FUNCTION for unbound entries, but still use the shadowing logic
+    ;; in that case.
     (let ((seen (make-hash-table :test #'eq))) ; TODO depends on namespace
       (flet ((visit (name value environment)
                (unless (gethash name seen)
                  (setf (gethash name seen) t)
-                 (funcall function name value environment))))
+                 (unless (eq value +unbound+)
+                   (funcall function name value environment)))))
         (declare (dynamic-extent #'visit))
-        (map-entries-using-scope #'visit namespace environment :direct)
+        ;; `:direct*' is a private scope that currently relies on
+        ;; implementation details to work. It is like `:direct' but
+        ;; includes unbound entries.
+        (map-entries-using-scope #'visit namespace environment :direct*)
         (map-entries-using-scope #'visit namespace parent      scope)))
     ;; If ENVIRONMENT does not have a PARENT, there are only direct
     ;; entries.
@@ -191,9 +215,15 @@
 ;;; `bindings+hierarchical-environment-mixin'
 
 (defclass bindings+hierarchical-environment-mixin
-    (bindings-mixin
-     hierarchical-environment-mixin)
+    (hierarchical-environment-mixin
+     bindings-mixin)
   ())
 
 #+later (defmethod make-bindings ((namespace   )
                           (environment )))
+
+(defmethod entry-count-in-bindings :around ((bindings    hash-table)
+                                            (namespace   hash-table-bindings-mixin)
+                                            (environment bindings+hierarchical-environment-mixin))
+  (- (call-next-method)
+     (count +unbound+ (hash-table-values bindings) :test #'eq)))
