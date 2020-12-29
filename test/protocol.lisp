@@ -9,6 +9,16 @@
 (def-suite* :computation.environment.protocol
   :in :computation.environment)
 
+;;; Entry count functions
+
+(test entry-count-using-scope
+  "Smoke test for the `entry-count-using-scope' function."
+
+  (let ((environment (make-populated-lexical-environment)))
+    (is (eql 5 (entry-count-using-scope 'function environment :all)))
+    (is (eql 3 (entry-count-using-scope 'function environment t)))
+    (is (eql 2 (entry-count-using-scope 'function environment :direct)))))
+
 (test entry-count.smoke
   "Smoke test for the `entry-count' function."
 
@@ -20,7 +30,21 @@
   (let ((environment (make-populated-global-environment)))
     (is (eql 3 (entry-count 'namespace environment)))
     (is (eql 0 (entry-count 'variable  environment)))
-    (is (eql 1 (entry-count 'function  environment)))))
+    (is (eql 3 (entry-count 'function  environment)))))
+
+(test entries-using-scope.smoke
+  "Smoke test for the `entries-using-scope' function."
+
+  (let ((environment (make-populated-lexical-environment)))
+    (is (set-equal/equal
+         '((bar . :bar) (baz . :baz) (fez . :fez) (baz . :baz2) (woo . :woo))
+         (entries-using-scope 'function environment :all)))
+    (is (set-equal/equal
+         '((bar . :bar) (baz . :baz2) (woo . :woo))
+         (entries-using-scope 'function environment t)))
+    (is (set-equal/equal
+         '((baz . :baz2) (woo . :woo))
+         (entries-using-scope 'function environment :direct)))))
 
 (test lookup.smoke
   "Smoke test for the `lookup' function."
