@@ -212,7 +212,7 @@
 
   #+BEGIN_SRC lisp :results none :exports none :session "doc"
     #.(progn
-        #1=(ql:quickload '(:computation.environment :alexandria :split-sequence))
+        #1=(ql:quickload '(:computation.environment :alexandria :split-sequence :text.documentation-string))
         '#1#)
     ,#+no (defun doc (symbol kind)
       (let* ((lambda-list (sb-introspect:function-lambda-list symbol))
@@ -226,10 +226,22 @@
     (defun doc (symbol kind)
       (let* ((lambda-list (sb-introspect:function-lambda-list symbol))
              (string      (documentation symbol kind))
-             (trimmed     (text.documentation-string.parser::remove-common-leading-whitespace string)))
-        (format t "~(~A~) ~<~{~A~^ ~}~:@>~2%"
+             (trimmed     (when string
+                            (text.documentation-string.parser::remove-common-leading-whitespace string))))
+        (format t "#+begin_quote~%")
+        (format t "*~~~(~A~)~~* src_lisp[:exports code]{~<~{~(~A~)~^ ~}~:@>}~2%"
                 symbol (list lambda-list))
-        (text.documentation-string.parser::render-org 'list (text.documentation-string.parser::parse trimmed) *standard-output*)))
+        ,#+no (format t "~(~A~) ~<~{~A~^ ~}~:@>~2%"
+                     symbol (list lambda-list))
+        (if trimmed
+            (text.documentation-string.unparser::render-org
+             'list
+             (text.documentation-string.parser::decide-meta-variables
+              (text.documentation-string.parser:parse trimmed 'list) 'list
+              :initial-entries (map 'list #'symbol-name lambda-list))
+             ,*standard-output*)
+            (format t "/not documented/~%"))
+        (format t "#+end_quote~%")))
   #+END_SRC
 
 ** STARTED The bindings protocol
@@ -239,58 +251,29 @@
    higher-level [[#sec:dictionary-environment-protocol][environment protocol]].
 
    <<generic-function:make-bindings>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:make-bindings 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : make-bindings NAMESPACE ENVIRONMENT
-   :
-   : Return a bindings object for NAMESPACE in ENVIRONMENT.
-   :
-   : The returned object must be usable with NAMESPACE and ENVIRONMENT
-   : in the bindings protocol.
-
    <<generic-function:entry-count-in-bindings>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:entry-count-in-bindings 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : entry-count-in-bindings BINDINGS NAMESPACE ENVIRONMENT
-   :
-   : Return the number of entries in BINDINGS in NAMESPACE, ENVIRONMENT.
-
    <<generic-function:map-entries-in-bindings>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:map-entries-in-bindings 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : map-entries-in-bindings FUNCTION BINDINGS NAMESPACE ENVIRONMENT
-   :
-   : NIL
-
    <<generic-function:lookup-in-bindings>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:lookup-in-bindings 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : lookup-in-bindings NAME BINDINGS NAMESPACE ENVIRONMENT
-   :
-   : NIL
-
    <<generic-function:setf-lookup-in-bindings>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc '(setf computation.environment:lookup-in-bindings) 'function)
    #+END_SRC
-
-   #+RESULTS:
-   : (setf lookup-in-bindings) NEW-VALUE NAME BINDINGS NAMESPACE ENVIRONMENT
-   :
-   : NIL
-
 
 ** STARTED The environment protocol
    :PROPERTIES:
@@ -298,123 +281,40 @@
    :END:
 
    <<generic-function:entry-count>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:entry-count 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : entry-count NAMESPACE ENVIRONMENT &KEY SCOPE
-   :
-   : Return the number of entries in NAMESPACE in ENVIRONMENT for SCOPE.
-
    <<generic-function:map-entries>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:map-entries 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : map-entries FUNCTION NAMESPACE ENVIRONMENT &KEY SCOPE
-   :
-   : Call FUNCTION for each entry in NAMESPACE in ENVIRONMENT for SCOPE.
-   :
-   : The lambda list of FUNCTION must be compatible with
-   :
-   : (name value container)
-
    <<generic-function:entries>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:entries 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : entries NAMESPACE ENVIRONMENT &KEY SCOPE
-   :
-   : Return entries in NAMESPACE in ENVIRONMENT for SCOPE as an alist.
-
    <<generic-function:lookup>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:lookup 'function)
    #+END_SRC
 
-   #+RESULTS:
-   #+begin_example
-   lookup NAME NAMESPACE ENVIRONMENT &KEY IF-DOES-NOT-EXIST SCOPE
-
-   Lookup and return the value for NAME in NAMESPACE in ENVIRONMENT for SCOPE.
-
-   Return three values: 1) the found value (subject to
-   IF-DOES-NOT-EXIST) 2) a Boolean indicating whether a value exists
-   3) the environment in which the value was found.
-
-   SCOPE controls which bindings are considered. Examples of scopes
-   include binding directly contained in ENVIRONMENT and bindings
-   contained in ENVIRONMENT or any of its ancestor environments.
-
-   IF-DOES-NOT-EXIST controls the behavior in case such a value does
-   not exist.
-   #+end_example
-
    <<generic-function:setf-lookup>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc '(setf computation.environment:lookup) 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : (setf lookup) NEW-VALUE NAME NAMESPACE ENVIRONMENT &KEY IF-DOES-NOT-EXIST
-   :
-   : Set the value of NAME in NAMESPACE in ENVIRONMENT to NEW-VALUE.
-
    <<generic-function:make-or-update>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:make-or-update 'function)
    #+END_SRC
-
-   #+RESULTS:
-   #+begin_example
-   make-or-update NAME NAMESPACE ENVIRONMENT MAKE-CONT UPDATE-CONT &KEY SCOPE
-
-   Use MAKE-CONT or UPDATE-CONT to set NAME in NAMESPACE in ENVIRONMENT for SCOPE.
-
-   Return four values: 1) the new value of NAME in NAMESPACE in
-   ENVIRONMENT 2) a Boolean indicating whether the value of NAME in
-   NAMESPACE in ENVIRONMENT has been updated 3) the previous value of
-   NAME in NAMESPACE in ENVIRONMENT 4) the container in which the
-   previous value was found.
-
-   If no value exists for NAME in NAMESPACE in ENVIRONMENT, MAKE-CONT
-   is called to make a value which is then set as the value of NAME
-   in NAMESPACE in ENVIRONMENT.
-
-   If a value exists for NAME in NAMESPACE in environment,
-   UPDATE-CONT is called with the existing value and its container to
-   potentially compute an updated value. If an updated value is
-   computed, that value is set as the value of NAME in NAMESPACE in
-   ENVIRONMENT.
-
-   MAKE-CONT has to be a function with a lambda list compatible to
-
-   ()
-
-   and has to return the new value as its primary return value.
-
-   UPDATE-CONT has to be a function with a lambda list compatible to
-
-   (old-value old-container)
-
-   and must return between two values and three values when called:
-   1) an updated value based on OLD-VALUE 2) a Boolean indicating
-   whether the first return value is different from OLD-VALUE 3)
-   optionally a container in which the returned updated value should
-   be set.
-   #+end_example
 
    <<generic-function:ensure>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (in-package #:cl-user)
      (doc 'computation.environment:ensure 'function)
    #+END_SRC
-
-   #+RESULTS:
 
 ** STARTED The hierarchical environment protocol
 
@@ -424,29 +324,16 @@
      (doc 'computation.environment:parent 'function)
    #+END_SRC
 
-   #+RESULTS:
-
    <<generic-function:root>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:root 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : root ENVIRONMENT
-   :
-   : Return the ancestor of ENVIRONMENT that has no parent.
-   :
-   : In particular, if ENVIRONMENT does not have a parent, return
-   : ENVIRONMENT.
-
    <<generic-function:depth>>
-   #+BEGIN_SRC lisp :results value :exports results :session "doc"
+   #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:depth 'function)
    #+END_SRC
 
-   #+RESULTS:
-   : depth ENVIRONMENT
-   :
-   : Return the number of ancestors ENVIRONMENT has.
-   :
-   : In particular, return 0 if ENVIRONMENT does not have a parent.
+# Local Variables:
+# eval: (require 'ob-lisp)
+# End:
