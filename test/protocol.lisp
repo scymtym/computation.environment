@@ -15,22 +15,22 @@
   "Smoke test for the `entry-count-using-scope' function."
 
   (let ((environment (make-populated-lexical-environment)))
-    (is (eql 5 (entry-count-using-scope 'function environment :all)))
-    (is (eql 3 (entry-count-using-scope 'function environment t)))
-    (is (eql 2 (entry-count-using-scope 'function environment :direct)))))
+    (is (eql 5 (env:entry-count-using-scope 'function environment :all)))
+    (is (eql 3 (env:entry-count-using-scope 'function environment t)))
+    (is (eql 2 (env:entry-count-using-scope 'function environment :direct)))))
 
 (test entry-count.smoke
   "Smoke test for the `entry-count' function."
 
   (let ((environment (make-empty-global-environment)))
-    (is (eql 3 (entry-count 'namespace environment)))
-    (is (eql 0 (entry-count 'variable  environment)))
-    (is (eql 0 (entry-count 'function  environment))))
+    (is (eql 3 (env:entry-count 'namespace environment)))
+    (is (eql 0 (env:entry-count 'variable  environment)))
+    (is (eql 0 (env:entry-count 'function  environment))))
 
   (let ((environment (make-populated-global-environment)))
-    (is (eql 3 (entry-count 'namespace environment)))
-    (is (eql 0 (entry-count 'variable  environment)))
-    (is (eql 3 (entry-count 'function  environment)))))
+    (is (eql 3 (env:entry-count 'namespace environment)))
+    (is (eql 0 (env:entry-count 'variable  environment)))
+    (is (eql 3 (env:entry-count 'function  environment)))))
 
 (test entries-using-scope.smoke
   "Smoke test for the `entries-using-scope' function."
@@ -38,13 +38,13 @@
   (let ((environment (make-populated-lexical-environment)))
     (is (set-equal/equal
          '((bar . :bar) (baz . :baz) (fez . :fez) (baz . :baz2) (woo . :woo))
-         (entries-using-scope 'function environment :all)))
+         (env:entries-using-scope 'function environment :all)))
     (is (set-equal/equal
          '((bar . :bar) (baz . :baz2) (woo . :woo))
-         (entries-using-scope 'function environment t)))
+         (env:entries-using-scope 'function environment t)))
     (is (set-equal/equal
          '((baz . :baz2) (woo . :woo))
-         (entries-using-scope 'function environment :direct)))))
+         (env:entries-using-scope 'function environment :direct)))))
 
 (test lookup.smoke
   "Smoke test for the `lookup' function."
@@ -56,23 +56,23 @@
                  expected-value &optional expected-value? expected-container)
                 arguments-and-expected
               (flet ((do-it ()
-                       (apply #'lookup name namespace environment
+                       (apply #'env:lookup name namespace environment
                               more-arguments)))
                 (case expected-value
-                  (entry-does-not-exist-error
-                   (signals entry-does-not-exist-error (do-it)))
-                  (namespace-does-not-exist-error
-                   (signals namespace-does-not-exist-error (do-it)))
+                  (env:entry-does-not-exist-error
+                   (signals env:entry-does-not-exist-error (do-it)))
+                  (env:namespace-does-not-exist-error
+                   (signals env:namespace-does-not-exist-error (do-it)))
                   (t
                    (multiple-value-bind (value value? container) (do-it)
                      (is (eql expected-value     value))
                      (is (eq  expected-value?    value?))
                      (is (eq  expected-container container))))))))
           `(;; Namespace does not exist
-            ((foo foo)                             namespace-does-not-exist-error)
-            ((foo foo :if-does-not-exist nil)      namespace-does-not-exist-error)
+            ((foo foo)                             env:namespace-does-not-exist-error)
+            ((foo foo :if-does-not-exist nil)      env:namespace-does-not-exist-error)
             ;; Name is not bound in namespace
-            ((foo function)                        entry-does-not-exist-error)
+            ((foo function)                        env:entry-does-not-exist-error)
             ((foo function :if-does-not-exist nil) nil  nil nil)
             ;; Name is bound in namespace
             ((bar function)                        :bar t   ,environment)))))
@@ -86,24 +86,24 @@
               arguments-and-expected
             (let ((environment (make-populated-global-environment)))
               (flet ((do-it ()
-                       (setf (lookup name namespace environment)
+                       (setf (env:lookup name namespace environment)
                              new-value)))
                 (case expected-value
-                  (entry-does-not-exist-error
-                   (signals entry-does-not-exist-error (do-it)))
-                  (namespace-does-not-exist-error
-                   (signals namespace-does-not-exist-error (do-it)))
+                  (env:entry-does-not-exist-error
+                   (signals env:entry-does-not-exist-error (do-it)))
+                  (env:namespace-does-not-exist-error
+                   (signals env:namespace-does-not-exist-error (do-it)))
                   (t
                    (let ((result (do-it)))
                      (is (eql expected-value result)))
                    (multiple-value-bind (value value? container)
-                       (lookup name namespace environment
-                               :if-does-not-exist nil)
+                       (env:lookup name namespace environment
+                                   :if-does-not-exist nil)
                      (is (eql expected-value value))
                      (is-true value?)
                      (is (eq environment     container)))))))))
         `(;; Namespace does not exist
-          ((1 foo foo)      namespace-does-not-exist-error)
+          ((1 foo foo)      env:namespace-does-not-exist-error)
           ;; Name is not bound in namespace.
           ((1 foo function) 1)
           ;; Name is already bound in namespace.
@@ -125,12 +125,13 @@
                                              (t
                                               expected-old-container))))
               (flet ((do-it ()
-                       (make-or-update name namespace environment
-                                       (lambda ()
-                                         new-value)
-                                       (lambda (old-value old-container)
-                                         (declare (ignore old-value old-container))
-                                         (values updated-value updated?)))))
+                       (env:make-or-update
+                        name namespace environment
+                        (lambda ()
+                          new-value)
+                        (lambda (old-value old-container)
+                          (declare (ignore old-value old-container))
+                          (values updated-value updated?)))))
                 (multiple-value-bind
                       (new-value new-value? old-value old-container)
                     (do-it)
@@ -157,8 +158,8 @@
                                              (t
                                               expected-old-container))))
               (flet ((do-it ()
-                       (ensure name namespace environment
-                               (constantly new-value))))
+                       (env:ensure name namespace environment
+                                   (constantly new-value))))
                 (multiple-value-bind (new-value new-value? old-container)
                     (do-it)
                   (is (eql expected-new-value     new-value))

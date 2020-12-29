@@ -12,13 +12,13 @@
 (test lexical-environment.construction.smoke
   "Test constructing `lexical-environment' instances."
 
-  (signals error (make-instance 'lexical-environment))
+  (signals error (make-instance 'env:lexical-environment))
 
   (let* ((parent (make-empty-global-environment))
-         (env    (make-instance 'lexical-environment :parent parent)))
-    (map-entries (lambda (name namespace environment)
-                   (unless (eq name 'namespace)
-                     (is (=     0      (entry-count namespace env)))
-                     (is (equal '()    (entries     namespace env)))
-                     (is (eq    parent environment))))
-                 'namespace env)))
+         (env    (make-instance 'env:lexical-environment :parent parent)))
+    (env:map-entries (lambda (name namespace environment)
+                       (unless (eq name 'namespace)
+                         (is (=     0      (env:entry-count namespace env)))
+                         (is (equal '()    (env:entries     namespace env)))
+                         (is (eq    parent environment))))
+                     'env::namespace env)))

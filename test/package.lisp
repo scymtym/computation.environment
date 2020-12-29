@@ -1,6 +1,6 @@
 ;;;; package.lisp --- Package definition for tests of the computation.environment system
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -11,6 +11,11 @@
    #:fiveam
 
    #:computation.environment)
+
+  (:local-nicknames
+   (#:a   #:alexandria)
+
+   (#:env #:computation.environment))
 
   (:export
    #:run-tests))

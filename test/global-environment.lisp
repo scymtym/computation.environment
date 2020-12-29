@@ -1,6 +1,6 @@
 ;;;; global-environment.lisp --- Tests for the global environment class.
 ;;;;
-;;;; Copyright (C) 2019 Jan Moringen
+;;;; Copyright (C) 2019, 2020 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -12,10 +12,10 @@
 (test construction.smoke
   "Test constructing `global-environment' instances."
 
-  (let ((env (make-instance 'global-environment)))
+  (let ((env (make-instance 'env:global-environment)))
     (is (=     0   (entry-count 'function env)))
     (is (equal '() (entries 'function env)))))
 
-(let ((env (make-instance 'global-environment)))
-  (list (lookup 'computation.environment::namespace 'computation.environment::namespace env)
-        (entries 'computation.environment::namespace env)))
+(let ((env (make-instance 'env:global-environment)))
+  (list (lookup 'env::namespace 'env::namespace env)
+        (entries 'env::namespace env)))
