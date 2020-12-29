@@ -54,6 +54,9 @@
                 (lambda (dynamic-environment &rest args)
                   (declare (ignore dynamic-environment))
                   (apply function args))))))
+    (setf (env:lookup 'funcall 'function env)
+          (lambda (dynamic-environment function &rest args)
+            (apply function dynamic-environment args)))
     env))
 
 (defclass dynamic-environment (env:lexical-environment)
@@ -99,6 +102,9 @@
     (let ((environment             (make-environment static-environment))
           (new-dynamic-environment dynamic-environment))
       (flet ((make-new-dynamic-environment ()
+               ;; Bind NEW-DYNAMIC-ENVIRONMENT to an actually new
+               ;; dynamic environment when the first binding is
+               ;; established.
                (if (eq new-dynamic-environment dynamic-environment)
                    (setf new-dynamic-environment
                          (make-dynamic-environment dynamic-environment))
@@ -114,10 +120,10 @@
 (defmethod evaluate ((form                symbol)
                      (dynamic-environment dynamic-environment)
                      (lexical-environment env:lexical-environment))
-  (if (env:lookup form 'variable-information lexical-environment
-                  :if-does-not-exist nil)
-      (env:lookup form 'variable dynamic-environment)
-      (env:lookup form 'variable lexical-environment)))
+  (values (if (env:lookup form 'variable-information lexical-environment
+                          :if-does-not-exist nil)
+              (env:lookup form 'variable dynamic-environment)
+              (env:lookup form 'variable lexical-environment))))
 
 (defmethod evaluate ((form                t)
                      (dynamic-environment dynamic-environment)
@@ -230,6 +236,7 @@
   (destructuring-bind (tag value) (rest form)
     (let ((tag   (evaluate tag dynamic-environment lexical-environment))
           (value (evaluate value dynamic-environment lexical-environment)))
+      (clouseau:inspect (list dynamic-environment lexical-environment))
       (funcall (env:lookup tag 'tag dynamic-environment) value))))
 
 (defmethod evaluate-using-head ((head                (eql 'lambda))
@@ -245,15 +252,16 @@
   (let ((dyn-env (make-instance 'dynamic-environment :parent *global-environment*))
         (lex-env (make-instance 'env:lexical-environment :parent *global-environment*)))
     (setf (env:lookup '*foo* 'variable-information lex-env) t)
-    (evaluate form
-              dyn-env lex-env)))
+    (evaluate form dyn-env lex-env)))
 
-(eval '(labels ((fac (n)
-                 (if (= n 0)
-                     1
-                     (* n (fac (1- n))))))
-        ;; (map 'list #'fac '(1 2 3 4 5 6))
-        (list (fac 1) (fac 2) (fac 3) (fac 4))))
+(assert (equal
+         '(1 2 6 24)
+         (eval '(labels ((fac (n)
+                          (if (= n 0)
+                              1
+                              (* n (fac (1- n))))))
+                 ;; (map 'list #'fac '(1 2 3 4 5 6))
+                 (list (fac 1) (fac 2) (fac 3) (fac 4))))))
 
 (assert (equal
          '(10 (8 2021) 2016 42)
