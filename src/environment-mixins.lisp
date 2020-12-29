@@ -92,7 +92,7 @@
                                       (environment meta-namespace-lookup-mixin)
                                       (scope       t))
     (let ((namespace (ensure-namespace environment namespace)))
-      (entry-count-using-scope namespace environment t)))
+      (entry-count-using-scope namespace environment scope)))
 
   (defmethod map-entries-using-scope ((function    function)
                                       (namespace   symbol)
