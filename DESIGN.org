@@ -28,7 +28,7 @@
              bindings in ancestor environment of the given
              environment.
 
-* Requirements [0/10]
+* Requirements [0/12]
 
 ** STARTED Looking up an entry by name
 
@@ -46,20 +46,30 @@
 
 ** STARTED Ensuring an entry exists in an environment
 
-   Without computing the value eagerly
+   Without computing the value eagerly.
 
-   Updating the existing entry if it is not adequate
+   +Updating the existing entry if it is not adequate+ See "Updating
+   an entry"
 
-   + [ ] Implement
+   + [X] Implement
    + [ ] Test
    + [ ] Document
 
-** TODO Map over entries
+** STARTED Updating an entry in an environment
+
+   As a client, I can update or create an entry in a given
+   {{{term(namespace)}}} in an {{{term(environment)}}}. I can provide
+   a continuation for updating an existing entry and a second thunk
+   for creating a new entry.
+
+   + [X] Implement
+   + [ ] Test
+   + [ ] Document
+
+** TODO Map over all entries
 
    As a client, I can map my function over all entries of an
    {{{term(environment)}}}.
-
-   + All namespaces vs. one namespace
 
    + Direct entries vs. inherited from parent
 
@@ -69,19 +79,32 @@
    + [ ] Test
    + [ ] Document
 
-** TODO Arbitrary namespaces
+** STARTED Map over namespace entries
+
+   As a client, I can map my function over all entries within a given
+   namespace of an {{{term(environment)}}}.
+
+   + Direct entries vs. inherited from parent
+
+   + Effective entries vs. shadowing
+
+   + [X] Implement
+   + [ ] Test
+   + [ ] Document
+
+** STARTED Arbitrary namespaces
 
    As a client, I can register arbitrary {{{term(namespace,s)}}} for a
    given {{{term(environment)}}} and perform all operations (put,
    lookup, map, …)  on them. I expect the sets of entries for two
    distinct namespaces to be independent of each other.
 
-** TODO Arbitrary namespace keys
+** STARTED Arbitrary namespace keys
 
    As a client, I can use arbitrary keys for a namespace and specify
    how lookups for this kind of key should work.
 
-** TODO Hierarchical environments
+** STARTED Hierarchical environments
 
    As a client, I can make a kind of environment that has an
    associated parent environment such that a kind of lookup that
@@ -109,7 +132,7 @@
 
 ** TODO Atomic/transactional updates?
 
-* Design Considerations
+* Design Considerations [0/2]
 
 ** STARTED Removing Entries
 
@@ -203,3 +226,60 @@
    #+END_EXAMPLE
 
 ** Hierarchical Case
+
+* Optimization Ideas
+
+** Vector Storage
+
+   In lexical environment, store binding information in vectors of the
+   form
+
+   #+BEGIN_EXAMPLE
+     #(FLAGS₁ BINDINGS₁ FLAGS₂ BINDINGS₂ …)
+   #+END_EXAMPLE
+
+   where each ~FLAGS BINDINGS~ pair stores information for one
+   namespace and ~FLAGS~ indicates whether ~BINDINGS~ is
+
+   + 0 :: empty
+   + ~#xff~ :: a hash-table
+   + $N$ :: an alist with $N$ cells
+
+   For each tuple of binding states, such as
+   ~(hash-table alist hash-table empty)~
+   a lookup function of the form
+
+   #+BEGIN_SRC lisp
+     (lambda (name namespace)
+       (case namespace
+         (NAMESPACE₁
+           (gethash name (aref bindings 1)))
+         (NAMESPACE₂
+           (assoc-value name (aref bindings 3)))
+         …))
+   #+END_SRC
+
+   when bindings for a namespace shrink or grow, the corresponding
+   ~FLAGS~ and ~BINDINGS~ values are updated and a new lookup function
+   is installed (after potentially creating it).
+
+   It should also be possible to specify the sizes of bindings when
+   creating environment to avoid growing storage incrementally and
+   changing representations.
+
+** Separate Class for single binding augmentation
+
+   Augmenting an environment with a single binding could be done using
+   a class
+
+   #+BEGIN_SRC lisp
+     (defclass single-binding-environment ()
+       ((%parent    :initarg :parent
+                    :reader  parent)
+        (%namespace :initarg :namespace
+                    :reader  namespace)
+        (%name      :initarg :name
+                    :reader  name)
+        (%value     :initarg :value
+                    :reader  value)))
+   #+END_SRC
