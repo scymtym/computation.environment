@@ -24,15 +24,15 @@
    #:make-bindings
    #:entry-count-in-bindings
    #:map-entries-in-bindings
-   #:lookup-in-bindings)                ; also setf
+   #:lookup-in-bindings)                        ; also setf
 
   ;; Environment protocol
   (:export
-   #:entry-count
-   #:map-entries
-   #:entries
+   #:entry-count    #:entry-count-using-scope
+   #:map-entries    #:map-entries-using-scope
+   #:entries        #:entries-using-scope
 
-   #:lookup                             ; also setf
+   #:lookup         #:lookup-using-scope        ; also setf
 
    #:make-or-update
    #:ensure)
