@@ -1,6 +1,6 @@
 ;;;; print.lisp --- Printing and describing environment objects.
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -82,7 +82,9 @@
                    (when (eql entry-count count)
                      (return-from entries-for-describe
                        (values result nil name-width)))
-                   (maxf name-width (length (string name)))
+                   (maxf name-width (length (typecase name ; TODO
+                                              ((or character string symbol) (string name))
+                                              (t (princ-to-string name)))))
                    (let ((inherited? (when (not (eq scope environment))
                                        scope)))
                      (push (list name value :inherited? inherited?) result))
