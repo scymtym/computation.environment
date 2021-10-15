@@ -72,6 +72,9 @@
 (#+sbcl sb-ext:defglobal #-sbcl defvar **meta-namespace**
   (make-instance 'eq-namespace))
 
+(defclass eql-namespace (eql-hash-table-bindings-mixin)
+  ())
+
 (defclass equal-namespace (equal-hash-table-bindings-mixin)
   ())
 

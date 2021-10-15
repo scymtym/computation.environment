@@ -1,6 +1,6 @@
 ;;;; namespace-mixins.lisp --- Namespace mixin classes.
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -35,15 +35,6 @@
                                       (environment t))
   (setf (gethash name bindings) new-value))
 
-;;; `equal-hash-table-bindings-mixin'
-
-(defclass equal-hash-table-bindings-mixin (hash-table-bindings-mixin)
-  ())
-
-(defmethod make-bindings ((namespace   equal-hash-table-bindings-mixin)
-                          (environment t))
-  (make-hash-table :test #'equal))
-
 ;;; `eq-hash-table-bindings-mixin'
 
 (defclass eq-hash-table-bindings-mixin (hash-table-bindings-mixin)
@@ -52,3 +43,22 @@
 (defmethod make-bindings ((namespace   eq-hash-table-bindings-mixin)
                           (environment t))
   (make-hash-table :test #'eq))
+
+;;; `eql-hash-table-bindings-mixin'
+
+(defclass eql-hash-table-bindings-mixin (hash-table-bindings-mixin)
+  ())
+
+(defmethod make-bindings ((namespace   eql-hash-table-bindings-mixin)
+                          (environment t))
+  (make-hash-table :test #'eql))
+
+
+;;; `equal-hash-table-bindings-mixin'
+
+(defclass equal-hash-table-bindings-mixin (hash-table-bindings-mixin)
+  ())
+
+(defmethod make-bindings ((namespace   equal-hash-table-bindings-mixin)
+                          (environment t))
+  (make-hash-table :test #'equal))
