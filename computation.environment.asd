@@ -1,6 +1,6 @@
 ;;;; computation.environment.asd --- System definition for the computation.environment system
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -14,7 +14,7 @@
 
                 "utilities.print-items")
 
-  :components  ((:module "src"
+  :components  ((:module "code"
                  :serial t
                  :components ((:file       "package")
                               (:file       "conditions")

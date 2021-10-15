@@ -14,7 +14,7 @@
                 "mcclim"
                 "clouseau")
 
-  :components  ((:module "src/inspection"
+  :components  ((:module "code/inspection"
                  :serial t
                  :components ((:file       "package")
                               (:file       "inspect")))))
