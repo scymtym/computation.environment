@@ -1,18 +1,18 @@
 ;;;; defclass.lisp --- Example implementation of CL:DEFCLASS.
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
 (cl:defpackage #:computation.environment.examples.defclass
   (:use
-   #:cl
-   #:alexandria)
+   #:cl)
 
   (:shadow
    #:defclass)
 
   (:local-nicknames
+   (#:a   #:alexandria)
    (#:env #:computation.environment)))
 
 (cl:in-package #:computation.environment.examples.defclass)
@@ -51,7 +51,7 @@
                      slots default-inits other-initargs
                      environment)
   (let* ((metaclass    (env:lookup metaclass-name 'class environment))
-         (superclasses (map 'list (rcurry #'ensure-superclass environment)
+         (superclasses (map 'list (a:rcurry #'ensure-superclass environment)
                             superclass-names)))
     (macrolet ((init (function &rest arguments)
                  `(apply #',function ,@arguments
@@ -87,7 +87,7 @@
                ;; , create a new instance.
                ((not (eq (class-name existing) name))
                 (values (init make-instance metaclass :name name) t))
-               ;; Depending on whether the existing class is an
+               ;; Depending on whether the existing class is a direct
                ;; instance of METACLASS, we try to change the class of
                ;; the existing class or just reinitialize it.
                ((not (eq (class-of existing) metaclass))
@@ -121,8 +121,8 @@
                     (:allocation    (setf allocation value))
                     (:type          (setf type value))
                     (:documentation (setf documentation value))
-                    (t              (appendf other-initargs
-                                             (list name value)))))
+                    (t              (a:appendf other-initargs
+                                               (list name value)))))
         (list name initargs readers writers initform allocation type
               documentation other-initargs))))
 
@@ -155,7 +155,7 @@
                       :writers       '(,@writers)
                       :initform      ',initform
                       :initfunction  (lambda () ,initform)
-                      :allocation    ',allocation
+                      :allocation    ',(or allocation :instance)
                       :type          ',type
                       :documentation ,documentation
                       ,@(loop :for (name value) :on options :by #'cddr
