@@ -53,19 +53,24 @@
                        (pprint-newline :mandatory stream)
                        (write-string ".." stream))))))
 
+(defun name-width (name)
+  (length (typecase name ; TODO
+            (symbol (let ((*package* (find-package '#:keyword)))
+                      (prin1-to-string name)))
+            (t      (princ-to-string name)))))
+
 (defmethod entries-for-describe ((namespace   t)
                                  (environment t)
-                                 &key
-                                 (count *print-length*))
+                                 &key (count *print-length*))
   (let ((result      '())
         (entry-count 0)
         (name-width  0))
-    (map-entries (lambda (name value scope)
-                   (declare (ignore scope))
+    (map-entries (lambda (name value container)
+                   (declare (ignore container))
                    (when (eql entry-count count)
                      (return-from entries-for-describe
-                       (values result nil name-width)))
-                   (maxf name-width (length (string name)))
+                       (values result t name-width)))
+                   (maxf name-width (name-width name))
                    (push (list name value) result)
                    (incf entry-count))
                  namespace environment)
@@ -73,32 +78,20 @@
 
 (defmethod entries-for-describe ((namespace   t)
                                  (environment hierarchical-environment-mixin)
-                                 &key
-                                 (count *print-length*))
+                                 &key (count *print-length*))
   (let ((result      '())
         (entry-count 0)
         (name-width  0))
-    (map-entries (lambda (name value scope)
+    (map-entries (lambda (name value container)
                    (when (eql entry-count count)
                      (return-from entries-for-describe
-                       (values result nil name-width)))
-                   (maxf name-width (length (typecase name ; TODO
-                                              ((or character string symbol) (string name))
-                                              (t (princ-to-string name)))))
-                   (let ((inherited? (when (not (eq scope environment))
-                                       scope)))
+                       (values result t name-width)))
+                   (maxf name-width (name-width name))
+                   (let ((inherited? (when (not (eq container environment))
+                                       container)))
                      (push (list name value :inherited? inherited?) result))
                    (incf entry-count))
                  namespace environment)
-    #+no (when-let ((parent (parent environment)))
-           (map-entries (lambda (name value)
-                          (when (eql entry-count count)
-                            (return-from entries-for-describe
-                              (values result nil name-width)))
-                          (maxf name-width (length (string name)))
-                          (push (list name value :inherited? parent) result)
-                          (incf entry-count))
-                        namespace parent))
     (values (nreverse result) nil name-width)))
 
 (defmethod describe-binding ((name        t)
@@ -109,5 +102,6 @@
                              &key
                              name-width
                              inherited?)
-  (format stream "~VS → ~S~@[ [inherited from ~A]~]"
-          name-width name value inherited?))
+  (let ((*package* (find-package '#:keyword)))
+    (format stream "~VS → ~S~@[ [inherited from ~A]~]"
+            name-width name value inherited?)))
