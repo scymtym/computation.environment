@@ -156,6 +156,8 @@
                                 (lexical-environment env:lexical-environment))
   (let ((lexical-environment     (make-environment lexical-environment))
         (new-dynamic-environment dynamic-environment))
+    ;; We create a new dynamic environment when we must bind a dynamic
+    ;; variable, but not otherwise.
     (flet ((make-new-dynamic-environment ()
              (if (eq new-dynamic-environment dynamic-environment)
                  (setf new-dynamic-environment (make-instance 'dynamic-environment :parent dynamic-environment))
@@ -174,6 +176,9 @@
   (destructuring-bind (name new-value-form) (rest form)
     (let* ((new-value   (evaluate new-value-form dynamic-environment lexical-environment))
            (environment (variable-environment name dynamic-environment lexical-environment)))
+      ;; We potentially "update", not because we care about the old
+      ;; /value/, but because we must set the new value in the old
+      ;; /environment/.
       (env:make-or-update name 'variable environment
                           (lambda ()
                             new-value)
