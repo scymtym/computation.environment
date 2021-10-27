@@ -4,7 +4,7 @@
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
-(cl:in-package #:computation.environment.visualization)
+(cl:in-package #:computation.environment.inspection)
 
 ;;; `entry-place'
 
