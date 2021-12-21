@@ -1,6 +1,6 @@
-;;;; lexical-environment.lisp ---
+;;;; lexical-environment.lisp --- A lexical environment.
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -14,6 +14,6 @@
    :parent (error "missing required initarg ~S" :parent)))
 
 (defmethod initialize-instance :after ((instance lexical-environment)
-                                       &key
-                                       parent)
+                                       &key parent)
+  ;; Used the (shared) namespace lookup cache of PARENT.
   (setf (%namespaces instance) (%namespaces parent)))

@@ -1,6 +1,6 @@
 ;;;; protocol.lisp --- Protocol provided by the computation.environment system.
 ;;;;
-;;;; Copyright (C) 2019, 2020 Jan Moringen
+;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -8,8 +8,10 @@
 
 ;;; Bindings protocol
 ;;;
-;;; This protocol allows accessing the bindings within a single
-;;; namespace in one particular environment.
+;;; This low-level protocol is responsible for creating and accessing
+;;; bindings in a given namespace in one particular
+;;; environment. Clients should usually use the higher-level
+;;; environment protocol
 
 (defgeneric make-bindings (namespace environment)
   (:documentation
@@ -22,11 +24,29 @@
   (:documentation
    "Return the number of entries in BINDINGS in NAMESPACE, ENVIRONMENT."))
 
-(defgeneric map-entries-in-bindings (function bindings namespace environment))
+(defgeneric map-entries-in-bindings (function bindings namespace environment)
+  (:documentation
+   "Call FUNCTION with each entry in BINDINGS in NAMESPACE, ENVIRONMENT.
 
-(defgeneric lookup-in-bindings (name bindings namespace environment))
+    The lambda list of FUNCTION must be compatible with
 
-(defgeneric (setf lookup-in-bindings) (new-value name bindings namespace environment))
+      (name value)
+
+    where NAME is the name of the entry and VALUE is the associated
+    value. Any value returned by FUNCTION is discarded."))
+
+(defgeneric lookup-in-bindings (name bindings namespace environment)
+  (:documentation
+   "Lookup and return the value for NAME in BINDINGS in NAMESPACE, ENVIRONMENT.
+
+    Return two values: 1) the found value or `nil' 2) a Boolean
+    indicating whether a value exists"))
+
+(defgeneric (setf lookup-in-bindings) (new-value name bindings namespace environment)
+  (:documentation
+   "Set the value of NAME in BINDINGS in NAMESPACE, ENVIRONMENT to NEW-VALUE.
+
+    Return NEW-VALUE as the primary return value."))
 
 ;;; Environment protocol
 ;;;
@@ -74,7 +94,9 @@
 
     The lambda list of FUNCTION must be compatible with
 
-      (name value container)"))
+      (name value container)
+
+    Any value returned by FUNCTION is discarded."))
 
 (define-scoped-protocol-function entries (namespace environment)
   (:documentation
@@ -120,27 +142,27 @@
     is called to make a value which is then set as the value of NAME
     in NAMESPACE in ENVIRONMENT.
 
-    If a value exists for NAME in NAMESPACE in environment,
-    UPDATE-CONT is called with the existing value and its container to
-    potentially compute an updated value. If an updated value is
-    computed, that value is set as the value of NAME in NAMESPACE in
-    ENVIRONMENT.
+    If a value exists for NAME in NAMESPACE in ENVIRONMENT,
+    UPDATE-CONT is called with the existing value and the container of
+    that existing value to potentially compute a new value. If a new
+    value is computed, that value is set as the value of NAME in
+    NAMESPACE in ENVIRONMENT.
 
-    MAKE-CONT has to be a function with a lambda list compatible to
+    MAKE-CONT has to be a function with a lambda list compatible with
 
       ()
 
     and has to return the new value as its primary return value.
 
-    UPDATE-CONT has to be a function with a lambda list compatible to
+    UPDATE-CONT has to be a function with a lambda list compatible
+    with
 
       (old-value old-container)
 
     and must return between two values and three values when called:
-    1) an updated value based on OLD-VALUE 2) a Boolean indicating
-    whether the first return value is different from OLD-VALUE 3)
-    optionally a container in which the returned updated value should
-    be set."))
+    1) a new value based on OLD-VALUE 2) a Boolean indicating whether
+    the first return value is different from OLD-VALUE 3) optionally a
+    container in which the returned new value should be set."))
 
 (defgeneric ensure (name namespace environment make-cont &key scope)
   (:documentation
@@ -155,7 +177,7 @@
     is called to make a value which is then set as the value of NAME
     in NAMESPACE in ENVIRONMENT.
 
-    MAKE-CONT has to be a function with a lambda list compatible to
+    MAKE-CONT has to be a function with a lambda list compatible with
 
       ()
 
@@ -176,8 +198,7 @@
                                        (namespace t) ; standard-object
                                        (container t)
                                        (scope     t)
-                                       &key
-                                       (if-does-not-exist #'error))
+                                       &key (if-does-not-exist #'error))
   (multiple-value-bind (value value? direct-container) (call-next-method)
     (if value?
         (values value value? direct-container)
