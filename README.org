@@ -82,6 +82,94 @@
        to the specified environment, that is ancestors of the
        environment are not considered.
 
+  #+BEGIN_SRC plantuml :exports results :file static-view.png
+    hide members
+
+    class environment
+    class namespace
+    class bindings
+
+    class eq-namespace extends namespace {
+    }
+    class equal-namespace extends namespace {
+    }
+
+    environment -> namespace
+    namespace -> bindings
+  #+END_SRC
+
+  #+RESULTS:
+  [[file:static-view.png]]
+
+  Object diagram without hierarchy
+
+  #+BEGIN_SRC plantuml :exports results :file objects-without-hierarchy.png
+    object "environment : lexical-environment" as environment
+    object "function-namespace ; function-name-namespace" as function_namespace
+    note bottom of function_namespace {
+      Legal names are of type ""(or symbol (cons (eql setf) (cons symbol null)))""
+    }
+    map "function-bindings : equal-hash-table-bindings" as function_bindings {
+      function-name₁ => function₁
+      function-name₂ => function₂
+      …              => …
+    }
+    object "variable-namespace : eq-namespace" as variable_namespace
+    map "variable-bindings : eq-hash-table-bindings" as variable_bindings {
+      variable-name₁ => variable₁
+      variable-name₂ => variable₂
+      …              => …
+    }
+    object "namespace-namespace : eq-namespace" as namespace_namespace
+    map "namespace-bindings : eq-hash-table-bindings" as namespace_bindings {
+      namespace *---> namespace_namespace
+      function  *---> function_namespace
+      variable  *---> variable_namespace
+    }
+
+    environment *-- namespace_bindings
+    environment *-- function_bindings
+    environment *-- variable_bindings
+  #+END_SRC
+
+  #+RESULTS:
+  [[file:objects-without-hierarchy.png]]
+
+  Object diagram with hierarchy
+
+  #+BEGIN_SRC plantuml :exports results :file objects-with-hierarchy.png
+    object "global-environment" as global_environment
+    object "namespace-namespace : eq-namespace" as namespace_namespace
+    object "variable-namespace : eq-namespace" as variable_namespace
+    object "function-namespace ; function-name-namespace" as function_namespace
+    map "namespace-bindings : eq-hash-table-bindings" as namespace_bindings {
+      namespace *--> namespace_namespace
+      function  *--> function_namespace
+      variable  *--> variable_namespace
+    }
+
+    object "environment : lexical-environment" as environment
+    map "function-bindings : equal-hash-table-bindings" as function_bindings {
+      function-name₁ => function₁
+      function-name₂ => function₂
+      …              => …
+    }
+    map "variable-bindings : eq-hash-table-bindings" as variable_bindings {
+      variable-name₁ => variable₁
+      variable-name₂ => variable₂
+      …              => …
+    }
+
+    global_environment *-right- namespace_bindings
+
+    environment -up-> global_environment : "parent"
+    environment *-- function_bindings
+    environment *-- variable_bindings
+  #+END_SRC
+
+  #+RESULTS:
+  [[file:objects-with-hierarchy.png]]
+
 * STARTED Tutorial
 
   #+BEGIN_SRC lisp :exports results :results silent
@@ -335,5 +423,5 @@
    #+END_SRC
 
 # Local Variables:
-# eval: (require 'ob-lisp)
+# eval: (mapcar 'require '(ob-lisp ob-plantuml))
 # End:
