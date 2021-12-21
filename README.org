@@ -179,7 +179,14 @@
 ** STARTED Making environments
 
    This library provides different kinds of environments such as
-   ~global-environment~.
+   ~global-environment~. Clients create instances of theses
+   environment classes using ~make-instance~. In order to hold any
+   [[glossary:binding][bindings]], an environment must contain at least one
+   [[glossary:namespace][namespace]]. Namespaces are stored as bindings in a special
+   namespace, but the details of that mechanism are not important at
+   this point. The following code creates a global environment that
+   contains a single namespace, called ~function~, but no "ordinary"
+   bindings:
 
    #+BEGIN_SRC lisp :exports both :results output
      (defvar *environment* (make-instance 'computation.environment:global-environment))
@@ -198,6 +205,10 @@
 
 ** STARTED Looking up bindings
 
+   As mentioned above, the new environment does not yet contain any
+   bindings in its ~function~ namespace, so an attempt to look up a
+   function in that environment must result in an error:
+
    #+BEGIN_SRC lisp :exports both
      (handler-case
          (computation.environment:lookup 'foo 'function *environment*)
@@ -208,6 +219,9 @@
    #+RESULTS:
    : An entry for name FOO does not exist in namespace #<EQ-NAMESPACE {100BDBF7B3}>
    : in environment #<GLOBAL-ENVIRONMENT 1 namespace {100A817B03}>
+
+   Correspondingly, listing all entries contained in the ~function~
+   namespace in the environment results in the empty list:
 
    #+BEGIN_SRC lisp :exports both
      (computation.environment:entries 'function *environment*)
@@ -246,8 +260,9 @@
                        *environment* 'function '(bar) '(:bar)
                        :class 'computation.environment::lexical-environment)))
        (describe augmented)
+       (format t "~&----------------")
        (handler-case
-           (computation.environment:lookup 'bar 'function augmented)
+           (print (computation.environment:lookup 'bar 'function augmented))
          (error (condition)
            (princ-to-string condition))))
    #+END_SRC
@@ -258,6 +273,8 @@
    :   EQ-NAMESPACE COMMON-LISP:FUNCTION 2 entries
    :     BAR → :BAR
    :     FOO → :FOO [inherited from #<GLOBAL-ENVIRONMENT 2 namespaces {10028B3063}>]
+   : ----------------
+   : :BAR
 
    but the original environment is not affected:
 
@@ -335,8 +352,9 @@
 ** STARTED The bindings protocol
 
    This low-level protocol is responsible for creating and accessing
-   [[glossary:binding][bindings]] in a given [[glossary:namespace][namespace]]. Clients should usually use the
-   higher-level [[#sec:dictionary-environment-protocol][environment protocol]].
+   [[glossary:binding][bindings]] in a given [[glossary:namespace][namespace]] in one particular
+   [[glossary:environment][environment]]. Clients should usually use the higher-level
+   [[#sec:dictionary-environment-protocol][environment protocol]].
 
    <<generic-function:make-bindings>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
@@ -367,6 +385,11 @@
    :PROPERTIES:
    :CUSTOM_ID: sec:dictionary-environment-protocol
    :END:
+
+   This protocol allows accessing the [[glossary:binding][bindings]] in all [[glossary:namespace][namespaces]] in a
+   given [[glossary:scope][scope]] starting at a particular [[glossary:environment][environment]]. The scope
+   controls, for example, whether bindings inherited from parent
+   environments should be considered.
 
    <<generic-function:entry-count>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
