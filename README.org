@@ -361,25 +361,78 @@
      (doc 'computation.environment:make-bindings 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~make-bindings~* src_lisp[:exports code]{namespace environment}
+
+   Return a bindings object for /namespace/ in /environment/.
+
+   The returned object must be usable with /namespace/ and /environment/
+   in the bindings protocol.
+   #+end_quote
+
    <<generic-function:entry-count-in-bindings>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:entry-count-in-bindings 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~entry-count-in-bindings~* src_lisp[:exports code]{bindings namespace
+                                                       environment}
+
+   Return the number of entries in /bindings/ in /namespace/, /environment/.
+   #+end_quote
 
    <<generic-function:map-entries-in-bindings>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:map-entries-in-bindings 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~map-entries-in-bindings~* src_lisp[:exports code]{function bindings namespace
+                                                       environment}
+
+   Call /function/ with each entry in /bindings/ in /namespace/, /environment/.
+
+   The lambda list of /function/ must be compatible with
+
+   #+BEGIN_EXAMPLE
+   (name value)
+   #+END_EXAMPLE
+   where /name/ is the name of the entry and /value/ is the associated
+   value. Any value returned by /function/ is discarded.
+   #+end_quote
+
    <<generic-function:lookup-in-bindings>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:lookup-in-bindings 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~lookup-in-bindings~* src_lisp[:exports code]{name bindings namespace environment}
+
+   Lookup and return the value for /name/ in /bindings/ in /namespace/, /environment/.
+
+   Return two values: 1) the found value or ~nil~ 2) a Boolean
+   indicating whether a value exists
+   #+end_quote
+
    <<generic-function:setf-lookup-in-bindings>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc '(setf computation.environment:lookup-in-bindings) 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~(setf lookup-in-bindings)~* src_lisp[:exports code]{new-value name bindings namespace environment}
+
+   Set the value of /name/ in /bindings/ in /namespace/, /environment/ to /new-value/.
+
+   Return /new-value/ as the primary return value.
+   #+end_quote
 
 ** STARTED The environment protocol
    :PROPERTIES:
@@ -396,36 +449,165 @@
      (doc 'computation.environment:entry-count 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~entry-count~* src_lisp[:exports code]{namespace environment &key scope}
+
+   Return the number of entries in /namespace/ in /environment/ for /scope/.
+   #+end_quote
+
    <<generic-function:map-entries>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:map-entries 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~map-entries~* src_lisp[:exports code]{function namespace environment &key
+                                           scope}
+
+   Call /function/ for each entry in /namespace/ in /environment/ for /scope/.
+
+   The lambda list of /function/ must be compatible with
+
+   #+BEGIN_EXAMPLE
+   (name value container)
+   #+END_EXAMPLE
+   Any value returned by /function/ is discarded.
+   #+end_quote
 
    <<generic-function:entries>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:entries 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~entries~* src_lisp[:exports code]{namespace environment &key scope}
+
+   Return entries in /namespace/ in /environment/ for /scope/ as an alist.
+   #+end_quote
+
    <<generic-function:lookup>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:lookup 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~lookup~* src_lisp[:exports code]{name namespace environment &key
+                                      if-does-not-exist scope}
+
+   Lookup and return the value for /name/ in /namespace/ in /environment/ for /scope/.
+
+   Return three values:
+   1) the found value (subject to /if-does-not-exist/)
+   2) a Boolean indicating whether a value exists
+   3) the environment in which the value was found.
+
+   /scope/ controls which bindings are considered. Examples of scopes
+   include binding directly contained in /environment/ and bindings
+   contained in /environment/ or any of its ancestor environments.
+
+   /if-does-not-exist/ controls the behavior in case such a value does
+   not exist.
+   #+end_quote
 
    <<generic-function:setf-lookup>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc '(setf computation.environment:lookup) 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~(setf lookup)~* src_lisp[:exports code]{new-value name namespace environment &key if-does-not-exist}
+
+   Set the value of /name/ in /namespace/ in /environment/ to /new-value/.
+
+   Return /new-value/ as the primary return value.
+
+   /if-does-not-exist/ is accepted for parity with ~lookup~.
+   #+end_quote
+
    <<generic-function:make-or-update>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:make-or-update 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~make-or-update~* src_lisp[:exports code]{name namespace environment make-cont
+                                              update-cont &key scope}
+
+   Use /make-cont/ or /update-cont/ to set /name/ in /namespace/ in /environment/ for /scope/.
+
+   Return four values:
+   1) the new value of /name/ in /namespace/ in /environment/
+   2) a Boolean indicating whether the value of /name/ in
+      /namespace/ in /environment/ has been updated
+   3) the previous value of /name/ in /namespace/ in /environment/
+   4) the container in which the previous value was found.
+
+   If no value exists for /name/ in /namespace/ in /environment/, /make-cont/
+   is called to make a value which is then set as the value of /name/
+   in /namespace/ in /environment/.
+
+   If a value exists for /name/ in /namespace/ in /environment/,
+   /update-cont/ is called with the existing value and the container of
+   that existing value to potentially compute a new value. If a new
+   value is computed, that value is set as the value of /name/ in
+   /namespace/ in /environment/.
+
+   /make-cont/ has to be a function with a lambda list compatible with
+
+   #+BEGIN_EXAMPLE
+   ()
+   #+END_EXAMPLE
+   and has to return the new value as its primary return value.
+
+   /update-cont/ has to be a function with a lambda list compatible
+   with
+
+   #+BEGIN_EXAMPLE
+   (old-value old-container)
+   #+END_EXAMPLE
+   and must return between two values and three values when called:
+   1) a new value based on OLD-VALUE
+   2) a Boolean indicating whether the first return value is different
+      from /OLD-VALUE/
+   3) optionally a container in which the returned new value should be
+      set.
+   #+end_quote
+
    <<generic-function:ensure>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
-     (in-package #:cl-user)
      (doc 'computation.environment:ensure 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~ensure~* src_lisp[:exports code]{name namespace environment make-cont &key
+                                      scope}
+
+   Maybe use /make-cont/ to set /name/ in /namespace/ in /environment/ for /scope/.
+
+   Return four values:
+   1) the new value of /name/ in /namespace/ in /environment/
+   2) a Boolean indicating whether the value of /name/ in
+      /namespace/ in /environment/ has been updated
+   3) the container in which the previous value was found.
+
+   If no value exists for /name/ in /namespace/ in /environment/, /make-cont/
+   is called to make a value which is then set as the value of /name/
+   in /namespace/ in /environment/.
+
+   /make-cont/ has to be a function with a lambda list compatible with
+
+   #+BEGIN_EXAMPLE
+   ()
+   #+END_EXAMPLE
+   and has to return the new value as its primary return value.
+   #+end_quote
 
 ** STARTED The hierarchical environment protocol
 
@@ -435,15 +617,43 @@
      (doc 'computation.environment:parent 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~parent~* src_lisp[:exports code]{environment}
+
+   Return the parent of /environment/ or ~nil~.
+
+   #+end_quote
+
    <<generic-function:root>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:root 'function)
    #+END_SRC
 
+   #+RESULTS:
+   #+begin_quote
+   *~root~* src_lisp[:exports code]{environment}
+
+   Return the ancestor of /environment/ that has no parent.
+
+   In particular, if /environment/ does not have a parent, return
+   /environment/.
+   #+end_quote
+
    <<generic-function:depth>>
    #+BEGIN_SRC lisp :results output raw :exports results :session "doc"
      (doc 'computation.environment:depth 'function)
    #+END_SRC
+
+   #+RESULTS:
+   #+begin_quote
+   *~depth~* src_lisp[:exports code]{environment}
+
+   Return the number of ancestors /environment/ has.
+
+   In particular, return /0/ if /environment/ does not have a parent.
+
+   #+end_quote
 
 # Local Variables:
 # eval: (mapcar 'require '(ob-lisp ob-plantuml))
