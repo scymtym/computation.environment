@@ -1,6 +1,6 @@
 ;;;; inspect.lisp --- Inspection support for environment objects.
 ;;;;
-;;;; Copyright (C) 2019, 2020, 2021 Jan Moringen
+;;;; Copyright (C) 2019-2023 Jan Moringen
 ;;;;
 ;;;; Author: Jan Moringen <jmoringe@techfak.uni-bielefeld.de>
 
@@ -167,7 +167,7 @@
 
 (clim:define-command (com-slot-style-entries :command-table clouseau:inspector-command-table
                                              :name          "Show entries instead of slots")
-    ((object inspected-environment
+    ((object 'inspected-environment
       :gesture (:select
                 :tester ((object)
                          (not (eq (clouseau::slot-style object) :entries)))
